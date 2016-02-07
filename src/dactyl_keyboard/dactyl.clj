@@ -689,6 +689,22 @@
 (def bottom-front-key-guard (->> (cube mount-width (/ mount-height 2) web-thickness)
                                  (translate [0 (/ mount-height 4) (+ (- (/ web-thickness 2)) -5)])))
 
+(defn stand-at [diameter placement]
+  (let [bumper-radius (/ diameter 2)
+       stand-diameter (+ diameter 2)
+       stand-radius (/ stand-diameter 2)]
+    (difference (->> (sphere stand-radius)
+                     (translate [0 0 (+ (/ stand-radius -2) -4.5)])
+                      placement
+                      bottom-hull)
+                (->> (cube stand-diameter stand-diameter stand-radius)
+                     (translate [0 0 (/ stand-radius -2)])
+                      placement)
+                (->> (sphere bumper-radius)
+                     (translate [0 0 (+ (/ stand-radius -2) -4.5)])
+                      placement
+                     (bottom 1.5)))))
+
 (def bottom-plate
   (union
    (apply union
@@ -957,25 +973,11 @@
                         (key-place 1 4 (translate [0 0 8.5] web-post-bl))
                         (key-place 1 4 half-post-bl)
                         )]
-         stands (let [bumper-diameter 9.6
-                      bumper-radius (/ bumper-diameter 2)
-                      stand-diameter (+ bumper-diameter 2)
-                      stand-radius (/ stand-diameter 2)
-                      stand-at #(difference (->> (sphere stand-radius)
-                                                 (translate [0 0 (+ (/ stand-radius -2) -4.5)])
-                                                 %
-                                                 (bottom-hull))
-                                            (->> (cube stand-diameter stand-diameter stand-radius)
-                                                 (translate [0 0 (/ stand-radius -2)])
-                                                 %)
-                                            (->> (sphere bumper-radius)
-                                                 (translate [0 0 (+ (/ stand-radius -2) -4.5)])
-                                                 %
-                                                 (bottom 1.5)))]
-                  [(stand-at #(key-place 0 1 %))
-                   (stand-at #(thumb-place 1 -1/2 %))
-                   (stand-at #(key-place 5 0 %))
-                   (stand-at #(key-place 5 3 %))])]
+         stands (let [bumper-diameter 9.6]
+                  [(stand-at bumper-diameter #(key-place 0 1 %))
+                   (stand-at bumper-diameter #(thumb-place 1 -1/2 %))
+                   (stand-at bumper-diameter #(key-place 5 0 %))
+                   (stand-at bumper-diameter #(key-place 5 3 %) )])]
      (apply union
             (concat
              main-keys-bottom
@@ -1166,8 +1168,8 @@
 
 (def dactyl-top-right
   (union
-    ; thumbcaps
-    ; caps
+    thumbcaps
+    caps
      (difference
        (union key-holes
               connectors
