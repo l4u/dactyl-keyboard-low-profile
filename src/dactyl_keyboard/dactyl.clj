@@ -2,7 +2,8 @@
   (:refer-clojure :exclude [use import])
   (:require [scad-clj.scad :refer :all]
             [scad-clj.model :refer :all]
-            [unicode-math.core :refer :all]))
+            [unicode-math.core :refer :all]
+            [clojure.core.matrix.operators :refer [+ - / *]]))
 
 ;;;;;;;;;;;;;;;;;
 ;; Switch Hole ;;
@@ -1135,6 +1136,115 @@
          (key-place 1/2 3/2))))
 
 
+;;;;;;;;;;;;;;;;
+;; Palm Rests ;;
+;;;;;;;;;;;;;;;;
+
+(defn bezier-conic [p0 p1 p2 steps]
+  (let [step1 (/ (- p1 p0) steps)
+        step2 (/ (- p2 p1) steps)]
+    (for [i (range steps)]
+      (let [point1 (+ p0 (* step1 i))
+            point2 (+ p1 (* step2 i))
+            point3 (+ p0 (* step1 (+ i 1)))
+            point4 (+ p1 (* step2 (+ i 1)))
+            bpoint1 (+ point1 (* (- point2 point1) (/ i steps)))
+            bpoint2 (+ point3 (* (- point4 point3) (/ (+ i 1) steps)))]
+        (polygon [bpoint1 bpoint2 p1])))))
+
+(defn bezier-cone [d h curve steps & {:keys [curve2] :or {curve2 (/ h 2)}}]
+  (let [p0 [(/ d 2) 0]
+        p1 [(+ curve (/ d 4)) curve2]
+        p2 [0 h]]
+  (cond
+     (< (nth p1 0) (/ d 4)) ; concave
+       (do (->> (union (polygon [[0 0] p0 p1 p2 [0 h]])
+                       (bezier-conic p0 p1 p2 steps))
+                (extrude-rotate {:fn steps})))
+     (> (nth p1 0) (/ d 4)) ; convex
+       (do (->> (difference (polygon [[0 0] p0 p1 p2 [0 h]])
+                            (bezier-conic p0 p1 p2 steps))
+                (extrude-rotate {:fn steps}))))))
+
+(def palm-rest
+  (let [p0 [15 0]
+        p1 [25 14]
+        p2 [7 30]
+        stand-diameter 9.6
+        rest-sphere-n 30 ; 30 for faster renders, 200 for printing
+        profile-sphere-n (* rest-sphere-n 2)
+        floor (->> (cube 300 300 50)
+                   (translate [0 0 -25]))
+        profile-cyl (->> (cylinder 200 50)
+                         (with-fn profile-sphere-n))
+        thumb-cutout (->> (polygon [[0 0] [3 -25] [-25 -32] [-25 0]])
+                          (extrude-linear {:height 25})
+                          (translate [-38 62 50]))
+        front-profile (->> (difference profile-cyl
+                                       (scale [1.4 0.81 1.1] profile-cyl))
+                           (translate [0 -147 55])
+                           (rotate (/ π 3.2) [-1 -0.2 -0.2]) ; Out of phase with rest-place
+                           )
+        bottom-profile (->> (cylinder 100 200)
+                            (with-fn profile-sphere-n)
+                            (rotate (/ π 2) [0 1 0])
+                            (translate [0 0 -60])
+                            (scale [1 1.1 1]))
+        base-shape (->> (bezier-cone 100 100 40 rest-sphere-n :curve2 60)
+                        (rotate (/ π 2) [-1 0 0])
+                        (translate [0 -10 0])
+                        (scale [1.4 1 1]))
+        rest-place #(->> % (rotate (/ π 3.2) [1 0.2 0.2])
+                           (translate [17 -73 -30]))
+        rest-shape (difference
+                     (rest-place
+                       (difference base-shape
+                                   front-profile
+                                   bottom-profile
+                                   (scale [0.95 0.95 0.95] base-shape)))
+                     floor)
+        inner-rest #(intersection
+                      % (intersection
+                        (rest-place base-shape)
+                        (->> (project rest-shape)
+                             (extrude-linear {:height 100})
+                             (translate [0 0 (/ 100 2)]))))
+        stand (fn [pos]
+                (inner-rest (stand-at stand-diameter #(translate pos %))))
+
+        brace (fn [top position]
+                (->> (bezier-conic [0 0] [0 -50] top rest-sphere-n)
+                     (extrude-linear {:height 8})
+                     (rotate (/ π 2) [0 -1 0])
+                     position
+                     inner-rest))
+
+        stands (union
+                     ; (stand [-5 -68 100])
+                      ; (stand [-12 -106 100])
+                     ;  (stand [60 -85 100])
+                      ; (stand [55 -68 100])
+                      ; (stand [25 -80 100])
+                      (->> (project rest-shape)
+                           (extrude-linear {:height 4})
+                           (translate [0 0 (/ 4 2)])
+                           inner-rest)
+                      (let [x1 -22
+                            x2 65
+                            x3 (/ (+ x1 x2) 2)]
+                         [(brace [40 0] #(translate [x1 -65 4] %))
+                          (brace [50 8] #(translate [x3 -66 4] %))
+                          (brace [56 60] #(translate [x2 -55 3.6]
+                                            (rotate (/ π 15) [0 0 0.3] %)))]
+                          ))
+
+        ]
+    (union stands
+           rest-shape)))
+
+(def spring-hole (sphere 0))
+
+
 ;;;;;;;;;;;;;;;;;;
 ;; Final Export ;;
 ;;;;;;;;;;;;;;;;;;
@@ -1192,9 +1302,31 @@
              trrs-hole-just-circle
              screw-holes))))
 
+(def dactyl-rest-left
+  (mirror [-1 0 0]
+          (difference palm-rest
+                      spring-hole)))
+
+(def hand-left
+  (->> (import "hand2.stl")
+       (scale [550 550 550])
+       (rotate (/ π 2) [-1 0 0])
+       (rotate (/ π 2) [0 0 1])
+       (rotate (/ π 18) [0 1 0])
+       (mirror [-1 0 0])
+       (translate [-50 -100 50])
+   ))
+
+(def dactyl-rest-right
+  (difference palm-rest
+              spring-hole))
+
 (def dactyl-combined-left
   (union dactyl-top-left
-         dactyl-bottom-left))
+         dactyl-bottom-left
+         dactyl-rest-left
+         hand-left
+         ))
 
 (def dactyl-combined-right
   (union dactyl-top-right
@@ -1211,3 +1343,9 @@
 
 (spit "things/dactyl-bottom-left.scad"
       (write-scad dactyl-bottom-left))
+
+(spit "things/dactyl-rest-right.scad"
+      (write-scad dactyl-rest-right))
+
+(spit "things/dactyl-rest-left.scad"
+      (write-scad dactyl-rest-left))
