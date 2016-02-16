@@ -1,1 +1,0 @@
-([:dependencies ([org.clojure/clojure "1.7.0"] [net.mikera/core.matrix "0.49.0"] [unicode-math/unicode-math "0.2.0"] [scad-clj/scad-clj "TEST"] [org.clojure/tools.nrepl "0.2.10" :exclusions ([org.clojure/clojure])] [clojure-complete/clojure-complete "0.2.3" :exclusions ([org.clojure/clojure])])])

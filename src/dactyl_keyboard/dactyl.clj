@@ -974,7 +974,7 @@
                         (key-place 1 4 (translate [0 0 8.5] web-post-bl))
                         (key-place 1 4 half-post-bl)
                         )]
-         stands (let [bumper-diameter 9.6]
+         stands (let [bumper-diameter 9.6] ; 3/8 = 9.6 1/2 = 12.7
                   [(stand-at bumper-diameter #(key-place 0 1 %))
                    (stand-at bumper-diameter #(thumb-place 1 -1/2 %))
                    (stand-at bumper-diameter #(key-place 5 0 %))
@@ -1166,6 +1166,26 @@
                             (bezier-conic p0 p1 p2 steps))
                 (extrude-rotate {:fn steps}))))))
 
+(defn prism [w l h taper-1 taper-2]
+  (let [t1 taper-1
+        t2 taper-2
+        wt (- w taper-1)
+        lt (- l taper-2)]
+    (polyhedron [[0 0 0]
+                 [t1 t1 h]
+                 [wt t1 h]
+                 [w 0 0]
+                 [0 l 0]
+                 [t1 lt h]
+                 [wt lt h]
+                 [w l 0]]
+                [[0 1 2] [2 3 0]
+                 [3 2 6] [6 7 3]
+                 [7 6 5] [5 4 7]
+                 [4 5 1] [1 0 4]
+                 [1 5 2] [2 5 6]
+                 [4 0 3] [7 4 3]])))
+
 (def palm-rest
   (let [p0 [15 0]
         p1 [25 14]
@@ -1182,65 +1202,96 @@
                           (translate [-38 62 50]))
         front-profile (->> (difference profile-cyl
                                        (scale [1.4 0.81 1.1] profile-cyl))
-                           (translate [0 -147 55])
+                           (scale [1 1.4 1])
+                           (translate [0 -225 55])
                            (rotate (/ π 3.2) [-1 -0.2 -0.2]) ; Out of phase with rest-place
                            )
         bottom-profile (->> (cylinder 100 200)
                             (with-fn profile-sphere-n)
-                            (rotate (/ π 2) [0 1 0])
-                            (translate [0 0 -60])
+                            (rotate (/ π 2.3) [0 1 0])
+                            (translate [0 0 -65])
                             (scale [1 1.1 1]))
-        base-shape (->> (bezier-cone 100 100 40 rest-sphere-n :curve2 60)
+        base-shape (->> (bezier-cone 80 100 43 rest-sphere-n :curve2 43)
                         (rotate (/ π 2) [-1 0 0])
                         (translate [0 -10 0])
-                        (scale [1.4 1 1]))
-        rest-place #(->> % (rotate (/ π 3.2) [1 0.2 0.2])
-                           (translate [17 -73 -30]))
+                        (scale [1.1 1 1]))
+        rest-place #(->> % (rotate (/ π 20) [0 1 1])
+                           (rotate (/ π 10) [1 0 0])
+                           (rotate (/ π 10) [0 1 0])
+                           (translate [10 -110 0]))
         rest-shape (difference
-                     (rest-place
-                       (difference base-shape
-                                   front-profile
-                                   bottom-profile
-                                   (scale [0.95 0.95 0.95] base-shape)))
-                     floor)
+                     ; (rest-place
+                       (difference base-shape))
+                                   ;front-profile
+                                   ;bottom-profile
+                                   ;(scale [0.95 0.95 0.95] base-shape)))
+                     ; floor)
         inner-rest #(intersection
                       % (intersection
                         (rest-place base-shape)
                         (->> (project rest-shape)
                              (extrude-linear {:height 100})
                              (translate [0 0 (/ 100 2)]))))
-        stand (fn [pos]
-                (inner-rest (stand-at stand-diameter #(translate pos %))))
 
-        brace (fn [top position]
-                (->> (bezier-conic [0 0] [0 -50] top rest-sphere-n)
-                     (extrude-linear {:height 8})
-                     (rotate (/ π 2) [0 -1 0])
-                     position
-                     inner-rest))
+        stand-place #(translate [15 -60 0] %)
 
-        stands (union
-                     ; (stand [-5 -68 100])
-                      ; (stand [-12 -106 100])
-                     ;  (stand [60 -85 100])
-                      ; (stand [55 -68 100])
-                      ; (stand [25 -80 100])
-                      (->> (project rest-shape)
-                           (extrude-linear {:height 4})
-                           (translate [0 0 (/ 4 2)])
-                           inner-rest)
-                      (let [x1 -22
-                            x2 65
-                            x3 (/ (+ x1 x2) 2)]
-                         [(brace [40 0] #(translate [x1 -65 4] %))
-                          (brace [50 8] #(translate [x3 -66 4] %))
-                          (brace [56 60] #(translate [x2 -55 3.6]
-                                            (rotate (/ π 15) [0 0 0.3] %)))]
-                          ))
+        front-rect (->> (prism 15 5 50 3 -2)
+                        (rotate (/ π 1) [1 0 0])
+                        (rotate (/ π 2) [0 0 1])
+                        (rotate (/ π 4) [-1 0 0])
+                        (rotate (/ π 6.8) [0 1 0])
+                        (translate [20 15 35])
+                        stand-place)
+
+        front-rect-diff (->> (cube 100 30 30)
+                             (rotate (/ π 5) [1 0 0])
+                             (rotate (/ π 20) [0 0 -1])
+                             (translate [0 -37 30]))
+
+        back-neg-rect (->> (prism 20.3 8 37 3 1)
+                           (rotate (/ π 4) [1 0 0])
+                           (translate [-10.15 -48 -5])
+                           stand-place)
+
+        back-neg-rect-diff (->> (cube 30 30 30)
+                                (rotate (/ π 6) [-1 0 0])
+                                (translate [-7.5 -88.2 22])
+                                stand-place
+                                )
+
+        back-pos-rect-1 (->> (prism 13 3 60 3 -2)
+                             (rotate (/ π 2) [0 0 1])
+                             (rotate (/ π 9) [-1 0 0])
+                             (rotate (/ π 60) [0 1 0])
+                             (translate [2 -61 11])
+                             stand-place
+                             inner-rest)
+
+        back-pos-rect-2 (->> (prism 15 5 30 3 -2)
+                             (rotate (/ π 7) [-1 0 0])
+                             (translate [-7.5 -71 22])
+                             stand-place
+                             inner-rest)
+
+        bottom-rect (->> (cube 45 20 5)
+                         (rotate (/ π 2) [0 0 1])
+                         (translate [0 -25 1])
+                         stand-place)
+        stands (difference (union front-rect
+                                  (translate [30 0 0] (mirror [-1 0 0] front-rect))
+                                  bottom-rect
+                                  back-neg-rect
+                                  back-pos-rect-1
+                                  back-pos-rect-2)
+                           front-rect-diff
+                           back-neg-rect-diff
+                           ; dactyl-bottom-right
+                           floor)
 
         ]
-    (union stands
-           rest-shape)))
+    (union ;stands
+           rest-shape
+           )))
 
 (def spring-hole (sphere 0))
 
@@ -1303,29 +1354,32 @@
              screw-holes))))
 
 (def dactyl-rest-left
-  (mirror [-1 0 0]
-          (difference palm-rest
-                      spring-hole)))
+  (mirror [-1 0 0] (difference palm-rest spring-hole)))
 
 (def hand-left
-  (->> (import "hand2.stl")
+  (->> (import "hand/hand.stl")
        (scale [550 550 550])
        (rotate (/ π 2) [-1 0 0])
        (rotate (/ π 2) [0 0 1])
        (rotate (/ π 18) [0 1 0])
        (mirror [-1 0 0])
-       (translate [-50 -100 50])
-   ))
+       (translate [-50 -100 50])))
+
+(def rat-rest
+  (->> (import "rat1/Palm Rest A.STL")
+       (translate [-40 -120 30])
+  ))
 
 (def dactyl-rest-right
   (difference palm-rest
               spring-hole))
 
 (def dactyl-combined-left
-  (union dactyl-top-left
-         dactyl-bottom-left
+  (union ;dactyl-top-left
+         ;dactyl-bottom-left
          dactyl-rest-left
-         hand-left
+         ; hand-left
+         ; rat-rest
          ))
 
 (def dactyl-combined-right
