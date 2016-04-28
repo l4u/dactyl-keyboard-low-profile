@@ -1220,12 +1220,12 @@
                            (rotate (/ π 10) [0 1 0])
                            (translate [10 -110 0]))
         rest-shape (difference
-                     ; (rest-place
-                       (difference base-shape))
-                                   ;front-profile
-                                   ;bottom-profile
-                                   ;(scale [0.95 0.95 0.95] base-shape)))
-                     ; floor)
+                      (rest-place
+                       (difference base-shape
+                                   front-profile
+                                   bottom-profile
+                                   (scale [0.95 0.95 0.95] base-shape)))
+                     floor)
         inner-rest #(intersection
                       % (intersection
                         (rest-place base-shape)
@@ -1289,7 +1289,7 @@
                            floor)
 
         ]
-    (union ;stands
+    (union stands
            rest-shape
            )))
 
@@ -1375,8 +1375,8 @@
               spring-hole))
 
 (def dactyl-combined-left
-  (union ;dactyl-top-left
-         ;dactyl-bottom-left
+  (union dactyl-top-left
+         dactyl-bottom-left
          dactyl-rest-left
          ; hand-left
          ; rat-rest
