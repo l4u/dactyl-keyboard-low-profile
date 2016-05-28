@@ -106,8 +106,8 @@
                               (translate [0 0 (- row-radius)])
                               (rotate (* α (- 2 row)) [1 0 0])
                               (translate [0 0 row-radius]))
-        column-offset (cond
-                        (= column 2) [0 2.82 -4.5]
+        column-row-offset (cond
+                        (= column 2) [0 2.4 -4.5]
                         (= column 4) [0 -5.8 5.64]
                         (and (= column 5) (not= row 4)) [5.2 -5.8 7.01]
                         (and (= column 5) (= row 4)) [0.5 -5.8 5.7]
@@ -119,7 +119,7 @@
                           (translate [0 0 (- column-radius)])
                           (rotate column-angle [0 1 0])
                           (translate [0 0 column-radius])
-                          (translate column-offset))]
+                          (translate column-row-offset))]
     (->> placed-shape
          (rotate (/ π 12) [0 1 0])
          (translate [0 0 13]))))
@@ -131,13 +131,22 @@
                               (translate [0 0 row-radius]))
         column-offset (if (= column 6)
                         [-7.25 -5.8 2.1]
-                        [0 -4.35 4.9])
+                        [0 -3.35 4.9])
+        row-offset (if (= row 0)
+                     [0 -1.7 0]
+                     [0 0 0])
+        column-row-offset (cond (and (= row 0) (= column 6)) [0 1.7 0]
+                                (and (= row 0)
+                                     (and (> column 1.2) (< column 3))) [0 0 0]
+                           :else [0 0 0])
         column-angle (* β (- 2 column))
         placed-shape (->> row-placed-shape
                           (translate [0 0 (- column-radius)])
                           (rotate column-angle [0 1 0])
                           (translate [0 0 column-radius])
-                          (translate column-offset))]
+                          (translate column-row-offset)
+                          (translate column-offset)
+                          (translate row-offset))]
     (->> placed-shape
          (rotate (/ π 12) [0 1 0])
          (translate [0 0 13]))))
@@ -408,10 +417,10 @@
   (concat (range start end step) [end]))
 
 (def wall-step 0.2)
-(def wall-sphere-n 4) ;;20 Sphere resolution, lower for faster renders
+(def wall-sphere-n 1) ;;20 Sphere resolution, lower for faster renders
 
 (defn wall-sphere-at [coords]
-  (->> (sphere 1)
+  (->> (sphere 2)
        (translate coords)
        (with-fn wall-sphere-n)))
 
@@ -424,7 +433,7 @@
                     (+ (/ mount-height -2) -3.5)
                     (+ (/ mount-height 2) 5.0)
                     front-to-back-scale)
-                   -5])) ; was -6, then 2
+                   -6])) ; was -6, then 2
 
 (defn wall-sphere-top [front-to-back-scale]
   (wall-sphere-at [0
@@ -490,15 +499,7 @@
 (def back-wall
   (let [step wall-step
         wall-sphere-top-backtep 0.05
-        place case-place
-        front-top-cover (fn [x-start x-end y-start y-end]
-                          (apply union
-                                 (for [x (range-inclusive x-start (- x-end wall-sphere-top-backtep) wall-sphere-top-backtep)
-                                       y (range-inclusive y-start (- y-end wall-sphere-top-backtep) wall-sphere-top-backtep)]
-                                   (hull (place x y wall-sphere-top-back)
-                                         (place (+ x wall-sphere-top-backtep) y wall-sphere-top-back)
-                                         (place x (+ y wall-sphere-top-backtep) wall-sphere-top-back)
-                                         (place (+ x wall-sphere-top-backtep) (+ y wall-sphere-top-backtep) wall-sphere-top-back)))))]
+        place case-place]
     (union
      (hull (place left-wall-column 0 (translate [1 -1 1] wall-sphere-bottom-back))
            (place (+ left-wall-column 1) 0  (translate [0 -1 1] wall-sphere-bottom-back))
@@ -506,7 +507,7 @@
            (key-place 0 0 web-post-tr))
 
      (hull (place 5 0 (translate [0 -0.91 1.32] wall-sphere-bottom-back))
-           (place right-wall-column 0 (translate [-1.0 -1.42 0.91] wall-sphere-bottom-back))
+           (place right-wall-column 0 (translate [-1.2 -1.52 0.91] wall-sphere-bottom-back))
            (key-place 5 0 web-post-tl)
            (key-place 5 0 (translate [5.6 0 0.05] web-post-tr)))
 
@@ -543,7 +544,7 @@
                       (place 6 (inc x) web-post-tr))))
              [(union
                (hull (place right-wall-column 0 (translate [-1 0 1] (wall-sphere-bottom 1/2)))
-                     (place right-wall-column 0.2 (translate [-0.99 3.12 1.7] (wall-sphere-bottom 1)))
+                     (place right-wall-column 0.2 (translate [-1.2 1.55 2.5] (wall-sphere-bottom 1)))
                      (place 6 0 web-post-tr))
                (hull (place right-wall-column 4 (translate [-1 0 1] (wall-sphere-bottom 1/2)))
                      (place right-wall-column 4 (translate [-1 1 1] (wall-sphere-bottom 0)))
@@ -552,7 +553,7 @@
 (def left-wall
   (let [place case-place]
     (union
-     (hull (place left-wall-column 0 (translate [1 -1 1] wall-sphere-bottom-back))
+     (hull (place left-wall-column 0 (translate [1 -1.5 1] wall-sphere-bottom-back))
            (place left-wall-column 1 (translate [1 0 1] wall-sphere-bottom-back))
            (key-place 0 0 web-post-tl)
            (key-place 0 0 web-post-bl))
@@ -572,57 +573,52 @@
            (key-place 0 3 web-post-tl))
      (hull (place left-wall-column 1.6666 (translate [1 0 1] wall-sphere-bottom-front))
            (thumb-place 1 1 web-post-tr)
-           (thumb-place 1/2 thumb-back-y (translate [0 -1 1] wall-sphere-bottom-back))))))
+           (thumb-place 1/2 thumb-back-y (translate [0 -1.7 1] wall-sphere-bottom-back))
+
+           ))))
 
 (def thumb-back-wall
   (let [step wall-step
         top-step 0.05
-        front-top-cover (fn [x-start x-end y-start y-end]
-                          (apply union
-                                 (for [x (range-inclusive x-start (- x-end top-step) top-step)
-                                       y (range-inclusive y-start (- y-end top-step) top-step)]
-                                   (hull (thumb-place x y wall-sphere-top-back)
-                                         (thumb-place (+ x top-step) y wall-sphere-top-back)
-                                         (thumb-place x (+ y top-step) wall-sphere-top-back)
-                                         (thumb-place (+ x top-step) (+ y top-step) wall-sphere-top-back)))))
         back-y thumb-back-y]
     (union
      (hull
-      (thumb-place 1/2 thumb-back-y (translate [0 -1 1] wall-sphere-bottom-back))
+      (thumb-place 1/2 thumb-back-y (translate [0 -1.7 1] wall-sphere-bottom-back))
       (thumb-place 1 1 web-post-tr)
-      (thumb-place 3/2 thumb-back-y (translate [0 -1 1] wall-sphere-bottom-back))
+      (thumb-place 3/2 thumb-back-y (translate [0 -1.7 1] wall-sphere-bottom-back))
       (thumb-place 1 1 web-post-tl))
      (hull
-      (thumb-place (+ 5/2 0.05) thumb-back-y (translate [1 -1 1] wall-sphere-bottom-back))
-      (thumb-place 3/2 thumb-back-y (translate [0 -1 1] wall-sphere-bottom-back))
+      (thumb-place (+ 5/2 0.05) thumb-back-y (translate [1.5 -1.7 1] wall-sphere-bottom-back))
+      (thumb-place 3/2 thumb-back-y (translate [0 -1.7 1] wall-sphere-bottom-back))
       (thumb-place 1 1 web-post-tl)
       (thumb-place 2 1 web-post-tl)))))
 
 (def thumb-left-wall
   (let [step wall-step
-        place thumb-place]
+        place thumb-place
+        wall (+ thumb-left-wall-column 0.001)]
     (union
      (hull
-      (thumb-place thumb-left-wall-column thumb-back-y (translate [1 -1 1] wall-sphere-bottom-back))
-      (thumb-place thumb-left-wall-column 0 (translate [1 0 1] wall-sphere-bottom-back))
+      (thumb-place wall thumb-back-y (translate [1.5 -1.7 1] wall-sphere-bottom-back))
+      (thumb-place wall 0 (translate [1.5 0 1] wall-sphere-bottom-back))
       (thumb-place 2 1 web-post-tl)
       (thumb-place 2 1 web-post-bl))
      (hull
-      (thumb-place thumb-left-wall-column 0 (translate [1 0 1] wall-sphere-bottom-back))
+      (thumb-place wall 0 (translate [1.5 0 1] wall-sphere-bottom-back))
       (thumb-place 2 0 web-post-tl)
       (thumb-place 2 1 web-post-bl))
      (hull
-      (thumb-place thumb-left-wall-column 0 (translate [1 0 1] wall-sphere-bottom-back))
-      (thumb-place thumb-left-wall-column -1 (translate [1 0 1] wall-sphere-bottom-back))
+      (thumb-place wall 0 (translate [1.5 0 1] wall-sphere-bottom-back))
+      (thumb-place wall -1 (translate [1.5 0 1] wall-sphere-bottom-back))
       (thumb-place 2 0 web-post-tl)
       (thumb-place 2 0 web-post-bl))
      (hull
-      (thumb-place thumb-left-wall-column -1 (translate [1 0 1] wall-sphere-bottom-back))
+      (thumb-place wall -1 (translate [1.5 0 1] wall-sphere-bottom-back))
       (thumb-place 2 -1 web-post-tl)
       (thumb-place 2 0 web-post-bl))
      (hull
-      (thumb-place thumb-left-wall-column -1 (translate [1 0 1] wall-sphere-bottom-back))
-      (thumb-place thumb-left-wall-column (+ -1 0.07) (translate [1 1 1] wall-sphere-bottom-front))
+      (thumb-place wall -1 (translate [1.5 0 1] wall-sphere-bottom-back))
+      (thumb-place wall (+ -1 0.07) (translate [1.5 1 1] wall-sphere-bottom-front))
       (thumb-place 2 -1 web-post-tl)
       (thumb-place 2 -1 web-post-bl)))))
 
@@ -630,6 +626,7 @@
   (let [step wall-step
         wall-sphere-top-front 0.05
         place thumb-place
+        wall (- thumb-front-row 0.04)
         plate-height (/ (- sa-double-length mount-height) 2)
         thumb-tl (->> web-post-tl
                       (translate [0 plate-height 0]))
@@ -638,25 +635,28 @@
         thumb-tr (->> web-post-tr
                       (translate [-0 plate-height 0]))
         thumb-br (->> web-post-br
-                      (translate [-0 (- plate-height) 0]))]
+                      (translate [-0 (- plate-height) 0]))
+        thumb-top (->> (cube 1 1 1)
+                       (translate [13 -12.3 -4.8]))]
     (union
-     (hull (place thumb-right-wall thumb-front-row (translate [-1 1 1] wall-sphere-bottom-front))
+
+     (hull (place thumb-right-wall wall (translate [0 2.1 1] wall-sphere-bottom-front))
            (key-place 1 4 web-post-bl)
            (place 0 -1/2 thumb-br)
            (place 0 -1/2 web-post-br)
-           (case-place 0.7 4 (translate [0 1 0] wall-sphere-bottom-front)))
+           (case-place 0 4 thumb-top))
 
-     (hull (place (+ 5/2 0.05) thumb-front-row (translate [1 1 1] wall-sphere-bottom-front))
-           (place (+ 3/2 0.05) thumb-front-row (translate [0 1 1] wall-sphere-bottom-front))
+     (hull (place (+ 5/2 0.05) wall (translate [1.5 1.5 1] wall-sphere-bottom-front))
+           (place (+ 3/2 0.05) wall (translate [0 1.5 1] wall-sphere-bottom-front))
            (place 2 -1 web-post-bl)
            (place 2 -1 web-post-br))
 
-     (hull (place thumb-right-wall thumb-front-row (translate [-1 1 1] wall-sphere-bottom-front))
-           (place (+ 1/2 0.05) thumb-front-row (translate [0 1 1] wall-sphere-bottom-front))
+     (hull (place thumb-right-wall wall (translate [-1 1.5 1] wall-sphere-bottom-front))
+           (place (+ 1/2 0.05) wall (translate [0 1.5 1] wall-sphere-bottom-front))
            (place 0 -1/2 thumb-bl)
            (place 0 -1/2 thumb-br))
-     (hull (place (+ 1/2 0.05) thumb-front-row (translate [0 1 1] wall-sphere-bottom-front))
-           (place (+ 3/2 0.05) thumb-front-row (translate [0 1 1] wall-sphere-bottom-front))
+     (hull (place (+ 1/2 0.05) wall (translate [0 1.5 1] wall-sphere-bottom-front))
+           (place (+ 3/2 0.05) wall (translate [0 1.5 1] wall-sphere-bottom-front))
            (place 0 -1/2 thumb-bl)
            (place 1 -1/2 thumb-bl)
            (place 1 -1/2 thumb-br)
@@ -802,12 +802,10 @@
                      [(union
                        (hull (bottom-place right-wall-column 0 (translate [-1 0 1] (wall-sphere-bottom 1/2)))
                              (bottom-place right-wall-column 0.02 (translate [-1 -1 1] (wall-sphere-bottom 1)))
-                             (key-place 5 0 web-post-tr)
-                             )
+                             (key-place 5 0 web-post-tr))
                        (hull (bottom-place right-wall-column 4 (translate [-1 0 1] (wall-sphere-bottom 1/2)))
                              (bottom-place right-wall-column 4 (translate [-1 1 1] (wall-sphere-bottom 0)))
-                             (key-place 5 4 half-post-br)
-                             )
+                             (key-place 5 4 half-post-br))
                        (hull (bottom-place right-wall-column 4 (translate [-1 0 1] (wall-sphere-bottom 1/2)))
                              (key-place 5 4 half-post-br)
                              (key-place 5 4 web-post-tr)))])
@@ -815,9 +813,7 @@
                     (for [x (range 1 6)]
                       (union
                        (hull
-                             (if (= x 5)
-                               (do (bottom-place (- x 1/2) 0 (translate [0 -1 1] wall-sphere-bottom-back))))
-                               (do (bottom-place (- x 1/2) 0 (translate [0 -1 1] wall-sphere-bottom-back)))
+                             (do (bottom-place (- x 1/2) 0 (translate [0 -1 1] wall-sphere-bottom-back)))
                              (if (= x 5)
                                (do (bottom-place (+ x 1/2) 0 (translate [11.5 -1.28 1.19] wall-sphere-bottom-back)))
                                (do (bottom-place (+ x 1/2) 0 (translate [0 -1 1] wall-sphere-bottom-back))))
@@ -971,9 +967,11 @@
                         (thumb-place 0 -1 web-post-br)
                         (thumb-place 0 -1/2 web-post-br)
                         (thumb-place thumb-right-wall thumb-front-row (translate [-1 1 1] wall-sphere-bottom-front))
-                        (key-place 1 4 (translate [0 0 8.5] web-post-bl))
-                        (key-place 1 4 half-post-bl)
-                        )]
+                        (key-place 1 4 (translate [3.4 -11 0] web-post-bl))
+                        (key-place 1 4 (translate [1.65 -9.5 0] web-post-bl))
+                        (key-place 1 4 half-post-bl))
+
+                       ]
          stands (let [bumper-diameter 9.6] ; 3/8 = 9.6 1/2 = 12.7
                   [(stand-at bumper-diameter #(key-place 0 1 %))
                    (stand-at bumper-diameter #(thumb-place 1 -1/2 %))
@@ -1100,25 +1098,29 @@
 (def teensy-support
   (difference
    (union
-    (->> (cube 3 3 9)
+    (->> (cube 5 5 9)
          (translate [0 0 -2])
          (key-place 1/2 3/2)
          (color [0 1 0]))
-    (hull (->> (cube 3 6 9)
+    (hull (->> (cube 5 6 9)
                (translate [0 0 -2])
                (key-place 1/2 2)
                (color [0 0 1]))
-          (->> (cube 3 3 (+ teensy-pcb-thickness 3))
+          (->> (cube 5 5 (+ teensy-pcb-thickness 5))
                (translate [0 (/ 30.5 -2) (+ (- teensy-offset-height)
-                                            #_(/ (+ teensy-pcb-thickness 3) -2)
+                                            #_(/ (+ teensy-pcb-thickness 5) -2)
                                             )])
                (key-place 1/2 3/2)
-               (color [0 0 1]))))
+               (color [0 0 1]))
+
+          ))
    teensy-pcb
-   (->> (cube 18 30.5 teensy-pcb-thickness)
-        (translate [0 1.5 (+ (/ teensy-pcb-thickness -2) (- teensy-offset-height) -1)])
+   (->> (cube 18 31 (+ teensy-pcb-thickness 1))
+        (translate [0 1.5 (+ (/ teensy-pcb-thickness -2) (- teensy-offset-height) -1.5)])
         (key-place 1/2 3/2)
-        (color [1 0 0]))))
+        (color [1 0 0]))
+
+   ))
 
 (def usb-cutout
   (let [hole-height 6.2
@@ -1195,37 +1197,52 @@
         profile-sphere-n (* rest-sphere-n 2)
         floor (->> (cube 300 300 50)
                    (translate [0 0 -25]))
+
         profile-cyl (->> (cylinder 200 50)
                          (with-fn profile-sphere-n))
-        thumb-cutout (->> (polygon [[0 0] [3 -25] [-25 -32] [-25 0]])
-                          (extrude-linear {:height 25})
-                          (translate [-38 62 50]))
+
+        rest-place #(->> % (rotate (/ π 40) [0 1 1])
+                           (rotate (/ π 11) [1 0 0])
+                           (rotate (/ π 12) [0 1 0])
+                           (translate [22 -100 7]))
+
         front-profile (->> (difference profile-cyl
                                        (scale [1.4 0.81 1.1] profile-cyl))
                            (scale [1 1.4 1])
                            (translate [0 -225 55])
-                           (rotate (/ π 3.2) [-1 -0.2 -0.2]) ; Out of phase with rest-place
-                           )
+                           (rotate (/ π 3.2) [-1 -0.2 -0.2]))
+
         bottom-profile (->> (cylinder 100 200)
                             (with-fn profile-sphere-n)
                             (rotate (/ π 2.3) [0 1 0])
                             (translate [0 0 -65])
                             (scale [1 1.1 1]))
+
         base-shape (->> (bezier-cone 80 100 43 rest-sphere-n :curve2 43)
                         (rotate (/ π 2) [-1 0 0])
                         (translate [0 -10 0])
                         (scale [1.1 1 1]))
-        rest-place #(->> % (rotate (/ π 20) [0 1 1])
-                           (rotate (/ π 10) [1 0 0])
-                           (rotate (/ π 10) [0 1 0])
-                           (translate [10 -110 0]))
-        rest-shape (difference
-                      (rest-place
-                       (difference base-shape
-                                   front-profile
-                                   bottom-profile
-                                   (scale [0.95 0.95 0.95] base-shape)))
-                     floor)
+
+        base-rest-shape (difference
+                          (rest-place
+                           (difference base-shape
+                                       front-profile
+                                       bottom-profile
+                                       (scale [0.93 0.93 0.93] base-shape)))
+                         floor)
+
+        shape-profile (->> (project base-rest-shape)
+                           (extrude-linear {:height 20}))
+
+        side-profile (->> (difference (scale [1.1 1.1 1] shape-profile)
+                                      (translate [3 -12 0]
+                                        (scale [0.97 0.97 1.2] shape-profile)))
+                          (rotate (/ π 26) [0 1 0])
+                          (translate [-2 9 50]))
+
+        rest-shape (difference base-rest-shape
+                               side-profile)
+
         inner-rest #(intersection
                       % (intersection
                         (rest-place base-shape)
@@ -1233,14 +1250,14 @@
                              (extrude-linear {:height 100})
                              (translate [0 0 (/ 100 2)]))))
 
-        stand-place #(translate [15 -60 0] %)
+        stand-place #(translate [24 -60 0] %)
 
-        front-rect (->> (prism 15 5 50 3 -2)
+        front-rect (->> (prism 15 7 50 5 -2)
                         (rotate (/ π 1) [1 0 0])
                         (rotate (/ π 2) [0 0 1])
                         (rotate (/ π 4) [-1 0 0])
                         (rotate (/ π 6.8) [0 1 0])
-                        (translate [20 15 35])
+                        (translate [17.5 15 35])
                         stand-place)
 
         front-rect-diff (->> (cube 100 30 30)
@@ -1248,50 +1265,53 @@
                              (rotate (/ π 20) [0 0 -1])
                              (translate [0 -37 30]))
 
-        back-neg-rect (->> (prism 20.3 8 37 3 1)
-                           (rotate (/ π 4) [1 0 0])
-                           (translate [-10.15 -48 -5])
+        back-neg-rect (->> (prism 20.3 8 43 3 1)
+                           (rotate (/ π 3.5) [1 0 0])
+                           (translate [-10.15 -35 -5])
                            stand-place)
 
         back-neg-rect-diff (->> (cube 30 30 30)
                                 (rotate (/ π 6) [-1 0 0])
-                                (translate [-7.5 -88.2 22])
-                                stand-place
-                                )
+                                (translate [-7.3 -80.6 28])
+                                stand-place)
 
-        back-pos-rect-1 (->> (prism 13 3 60 3 -2)
+        back-pos-rect-1 (->> (prism 12 10 60 3 4)
                              (rotate (/ π 2) [0 0 1])
                              (rotate (/ π 9) [-1 0 0])
-                             (rotate (/ π 60) [0 1 0])
-                             (translate [2 -61 11])
+                             (translate [5 -56 11.8])
                              stand-place
                              inner-rest)
 
-        back-pos-rect-2 (->> (prism 15 5 30 3 -2)
-                             (rotate (/ π 7) [-1 0 0])
-                             (translate [-7.5 -71 22])
-                             stand-place
-                             inner-rest)
+        back-pos-rect-2 (->> (prism 15 5 31 3 -2)
+                             (rotate (/ π 6.8) [-1 0 0])
+                             (translate [-7.5 -66 23.5])
+                             stand-place)
 
-        bottom-rect (->> (cube 45 20 5)
+        inner-support (->> (bezier-cone 90 12 -10 rest-sphere-n)
+                           (rotate (/ π 1.01) [-1 0 0])
+                           (rotate (/ π 20) [0 1 0])
+                           (translate [3 -57 54])
+                           stand-place
+                           inner-rest)
+
+        bottom-rect (->> (cube 30 20 7)
                          (rotate (/ π 2) [0 0 1])
-                         (translate [0 -25 1])
+                         (translate [0 -19.3 1])
                          stand-place)
         stands (difference (union front-rect
-                                  (translate [30 0 0] (mirror [-1 0 0] front-rect))
+                                  (translate [48 0 0] (mirror [-1 0 0] front-rect))
                                   bottom-rect
+                                  inner-support
                                   back-neg-rect
                                   back-pos-rect-1
                                   back-pos-rect-2)
-                           front-rect-diff
                            back-neg-rect-diff
-                           ; dactyl-bottom-right
+                           front-rect-diff
                            floor)
 
         ]
     (union stands
-           rest-shape
-           )))
+           rest-shape)))
 
 (def spring-hole (sphere 0))
 
@@ -1300,6 +1320,11 @@
 ;; Final Export ;;
 ;;;;;;;;;;;;;;;;;;
 
+(def production-offset 2.5) ; 2.5 for cast metal, 0 for printed plastic
+
+(def diff-case
+  (translate [0 0 production-offset] new-case))
+
 (def dactyl-bottom-right
   (difference
    (union
@@ -1307,7 +1332,7 @@
     (difference
      bottom-plate
      (hull teensy-cover)
-     new-case
+     diff-case
      teensy-cover
      trrs-cutout
      (->> (cube 1000 1000 10) (translate [0 0 -5]))
@@ -1321,16 +1346,16 @@
            (difference
             bottom-plate
             (hull io-exp-cover)
-            new-case
+            diff-case
             io-exp-cover
             trrs-cutout
             (->> (cube 1000 1000 10) (translate [0 0 -5]))
             screw-holes))))
 
 (def dactyl-top-right
-  (union
-    thumbcaps
-    caps
+  (translate [0 0 production-offset] (union
+     ; thumbcaps
+     ; caps
      (difference
        (union key-holes
               connectors
@@ -1338,68 +1363,47 @@
               new-case
               teensy-support)
        trrs-hole-just-circle
-       screw-holes)))
+       screw-holes))))
 
 (def dactyl-top-left
   (mirror [-1 0 0]
-          (union
-            thumbcaps
-            caps
-            (difference
-             (union key-holes
-                    connectors
-                    thumb
-                    new-case)
-             trrs-hole-just-circle
-             screw-holes))))
+      (translate [0 0 production-offset] (union
+         ;thumbcaps
+         ;caps
+         (difference
+           (union key-holes
+                  connectors
+                  thumb
+                  new-case)
+           trrs-hole-just-circle
+           screw-holes)))))
 
 (def dactyl-rest-left
   (mirror [-1 0 0] (difference palm-rest spring-hole)))
 
-(def hand-left
-  (->> (import "hand/hand.stl")
-       (scale [550 550 550])
-       (rotate (/ π 2) [-1 0 0])
-       (rotate (/ π 2) [0 0 1])
-       (rotate (/ π 18) [0 1 0])
-       (mirror [-1 0 0])
-       (translate [-50 -100 50])))
-
-(def rat-rest
-  (->> (import "rat1/Palm Rest A.STL")
-       (translate [-40 -120 30])
-  ))
 
 (def dactyl-rest-right
   (difference palm-rest
               spring-hole))
 
-(def dactyl-combined-left
-  (union dactyl-top-left
+(def dactyl-combined-bottom-left
+  (union ;dactyl-top-left
          dactyl-bottom-left
-         dactyl-rest-left
-         ; hand-left
-         ; rat-rest
-         ))
+         dactyl-rest-left))
 
-(def dactyl-combined-right
-  (union dactyl-top-right
-         dactyl-bottom-right))
+(def dactyl-combined-bottom-right
+  (union ;dactyl-top-right
+         dactyl-bottom-right
+         dactyl-rest-right))
 
 (spit "things/dactyl-top-right.scad"
       (write-scad dactyl-top-right))
 
 (spit "things/dactyl-bottom-right.scad"
-      (write-scad dactyl-bottom-right))
+      (write-scad dactyl-combined-bottom-right))
 
 (spit "things/dactyl-top-left.scad"
-      (write-scad dactyl-combined-left))
+      (write-scad dactyl-top-left))
 
 (spit "things/dactyl-bottom-left.scad"
-      (write-scad dactyl-bottom-left))
-
-(spit "things/dactyl-rest-right.scad"
-      (write-scad dactyl-rest-right))
-
-(spit "things/dactyl-rest-left.scad"
-      (write-scad dactyl-rest-left))
+      (write-scad dactyl-combined-bottom-left))
