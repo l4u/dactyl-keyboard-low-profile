@@ -423,7 +423,6 @@
 (defn wall-cube-at [coords]
   (->> (cube 1.5 1.5 1.5)
        (translate coords)))
-       ; (with-fn wall-cube-n)))
 
 (defn scale-to-range [start end x]
   (+ start (* (- end start) x)))
@@ -668,7 +667,7 @@
         thumb-br (->> web-post-br
                       (translate [-0 (- plate-height) 0]))
         thumb-bottom (->> (cube 3 3 0.001)
-                       (translate [13 -11.7 -5.4]))
+                       (translate [13.6 -15 -8]))
         thumb-top (->> (cube 1 1 1)
                        (translate [13 -11.7 -5.4]))]
      (hull (place thumb-right-wall wall (translate [-1 1.5 1] wall-cube-bottom-front))
@@ -1222,7 +1221,7 @@
         p1 [25 14]
         p2 [7 30]
         stand-diameter 9.6
-        rest-sphere-n 30 ; 30 for faster renders, 200 for printing
+        rest-sphere-n 200 ; 30 for faster renders, 200 for printing
         profile-sphere-n (* rest-sphere-n 2)
         floor (->> (cube 300 300 50)
                    (translate [0 0 -25]))
@@ -1290,9 +1289,9 @@
                         stand-place)
 
         front-rect-diff (->> (cube 100 30 30)
-                             (rotate (/ π 5) [1 0 0])
+                             (rotate (/ π 4) [1 0 0])
                              (rotate (/ π 20) [0 0 -1])
-                             (translate [0 -37 30]))
+                             (translate [0 -37 31]))
 
         back-neg-rect (->> (prism 20.3 8 43 3 1)
                            (rotate (/ π 3.5) [1 0 0])
@@ -1336,20 +1335,38 @@
                                   back-pos-rect-2)
                            back-neg-rect-diff
                            front-rect-diff
-                           floor)
-
-        ]
+                           floor)]
     (union stands
            rest-shape)))
 
-(def spring-hole (sphere 0))
+(def tolerance 0.3)
+
+(defn rest-alignment-shapes [d]
+  (let [shape (difference
+                (->> (cylinder d 6)
+                     (rotate (/ π 1) [1 0 0])
+                     (rotate (/ π 2) [0 0 1])
+                     (rotate (/ π 4) [-1 0 0])
+                     (rotate (/ π 8) [0 1 0])
+                     (translate [14.5 0 0])
+                     (with-fn 20))
+                (->> (cube 10 10 10)
+                     (rotate (/ π 5) [-1 0 0])
+                     (translate [14.5 2 7.5])))]
+
+    (translate [24 -50 19]
+      (union
+        (translate [-0.5 -1.75 -1.75] shape)
+        (mirror [-1 0 0] shape)))))
+
+(def case-alignment-male (rest-alignment-shapes 1))
+(def case-alignment-female (rest-alignment-shapes (+ tolerance 1)))
 
 
 ;;;;;;;;;;;;;;;;;;
 ;; Final Export ;;
 ;;;;;;;;;;;;;;;;;;
 
-(def case-tolerance 0.3)
 
 (defn offset-case-place [offset block]
   (->> block
@@ -1358,8 +1375,8 @@
 
 (def case-tolerance
   (let [place offset-case-place
-        t case-tolerance
-        -t (- case-tolerance)
+        t tolerance
+        -t (- tolerance)
         t2 (* t 2)]
     (union
       (place [0 0 0] new-case)
@@ -1381,6 +1398,7 @@
     (difference
      bottom-plate
      (hull teensy-cover)
+     case-alignment-female
      case-tolerance
      teensy-cover
      trrs-cutout
@@ -1395,6 +1413,7 @@
            (difference
             bottom-plate
             (hull io-exp-cover)
+            case-alignment-female
             case-tolerance
             io-exp-cover
             trrs-cutout
@@ -1428,20 +1447,21 @@
            screw-holes)))))
 
 (def dactyl-rest-left
-  (mirror [-1 0 0] (difference palm-rest spring-hole)))
+  (mirror [-1 0 0]
+    (union palm-rest
+           case-alignment-male)))
 
 
 (def dactyl-rest-right
-  (difference palm-rest
-              spring-hole))
+  (union palm-rest
+         case-alignment-male))
 
-(def dactyl-combined-bottom-left
+(def dactyl-combined-left
   (union dactyl-top-left
          dactyl-bottom-left
-         ;dactyl-rest-left
-         ))
+         dactyl-rest-left))
 
-(def dactyl-combined-bottom-right
+(def dactyl-combined-right
   (union dactyl-top-right
          dactyl-bottom-right
          dactyl-rest-right))
@@ -1450,10 +1470,22 @@
       (write-scad dactyl-top-right))
 
 (spit "things/dactyl-bottom-right.scad"
-      (write-scad dactyl-combined-bottom-right))
+      (write-scad dactyl-bottom-right))
+
+(spit "things/dactyl-rest-right.scad"
+      (write-scad dactyl-rest-right))
+
+(spit "things/dactyl-combined-right.scad"
+      (write-scad dactyl-combined-right))
 
 (spit "things/dactyl-top-left.scad"
       (write-scad dactyl-top-left))
 
 (spit "things/dactyl-bottom-left.scad"
-      (write-scad dactyl-combined-bottom-left))
+      (write-scad dactyl-bottom-left))
+
+(spit "things/dactyl-rest-left.scad"
+      (write-scad dactyl-rest-left))
+
+(spit "things/dactyl-combined-left.scad"
+      (write-scad dactyl-combined-left))
