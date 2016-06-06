@@ -1147,7 +1147,6 @@
         (translate [0 1.5 (+ (/ teensy-pcb-thickness -2) (- teensy-offset-height) -1.5)])
         (key-place 1/2 3/2)
         (color [1 0 0]))
-
    ))
 
 (def usb-cutout
@@ -1164,6 +1163,38 @@
          (translate [0 0 (- 1)])
          (translate [0 0 (- teensy-offset-height)])
          (key-place 1/2 3/2))))
+
+
+;;;;;;;;;;;;;;;;
+;; Tolerances ;;
+;;;;;;;;;;;;;;;;
+
+(def tolerance 0.3)
+
+(defn offset-case-place [offset block]
+  (->> block
+       (translate [0 0 1])
+       (translate offset)))
+
+(def case-tolerance
+  (let [place offset-case-place
+        t tolerance
+        -t (- tolerance)
+        t2 (* t 2)]
+    (union
+      (place [0 0 0] new-case)
+      (place [-t t 0] front-wall)
+      (place [-t 0 0] right-wall)
+      (place [0 t 0] back-wall)
+      (place [0 -t 0] back-wall)
+      (place [t2 0 0] left-wall)
+      (place [-t 0 0] left-inside-wall)
+      (place [-t -t 0] left-inside-wall)
+      (place [0 -t 0] thumb-back-wall)
+      (place [t 0 0] thumb-left-wall)
+      (place [t t 0] thumb-inside-wall)
+      (place [-t 0 0] thumb-inside-wall)
+      (place [0 t 0] thumb-front-wall))))
 
 
 ;;;;;;;;;;;;;;;;
@@ -1221,7 +1252,7 @@
         p1 [25 14]
         p2 [7 30]
         stand-diameter 9.6
-        rest-sphere-n 200 ; 30 for faster renders, 200 for printing
+        rest-sphere-n 170 ; 30 for faster renders, 170 for printing
         profile-sphere-n (* rest-sphere-n 2)
         floor (->> (cube 300 300 50)
                    (translate [0 0 -25]))
@@ -1334,29 +1365,28 @@
                                   back-pos-rect-1
                                   back-pos-rect-2)
                            back-neg-rect-diff
+                           bottom-plate
+                           case-tolerance
                            front-rect-diff
                            floor)]
     (union stands
            rest-shape)))
 
-(def tolerance 0.3)
 
 (defn rest-alignment-shapes [d]
   (let [shape (difference
-                (->> (cylinder d 6)
-                     (rotate (/ π 1) [1 0 0])
+                (->> (cylinder d 2)
                      (rotate (/ π 2) [0 0 1])
                      (rotate (/ π 4) [-1 0 0])
-                     (rotate (/ π 8) [0 1 0])
                      (translate [14.5 0 0])
                      (with-fn 20))
                 (->> (cube 10 10 10)
                      (rotate (/ π 5) [-1 0 0])
                      (translate [14.5 2 7.5])))]
 
-    (translate [24 -50 19]
+    (translate [24 -51 19]
       (union
-        (translate [-0.5 -1.75 -1.75] shape)
+        (translate [-0.8 -1.75 -1.75] shape)
         (mirror [-1 0 0] shape)))))
 
 (def case-alignment-male (rest-alignment-shapes 1))
@@ -1366,30 +1396,6 @@
 ;;;;;;;;;;;;;;;;;;
 ;; Final Export ;;
 ;;;;;;;;;;;;;;;;;;
-
-
-(defn offset-case-place [offset block]
-  (->> block
-       (translate [0 0 1])
-       (translate offset)))
-
-(def case-tolerance
-  (let [place offset-case-place
-        t tolerance
-        -t (- tolerance)
-        t2 (* t 2)]
-    (union
-      (place [0 0 0] new-case)
-      (place [-t t 0] front-wall)
-      (place [-t 0 0] right-wall)
-      (place [t2 0 0] left-wall)
-      (place [-t 0 0] left-inside-wall)
-      (place [-t -t 0] left-inside-wall)
-      (place [0 -t 0] thumb-back-wall)
-      (place [t 0 0] thumb-left-wall)
-      (place [t t 0] thumb-inside-wall)
-      (place [-t 0 0] thumb-inside-wall)
-      (place [0 t 0] thumb-front-wall))))
 
 (def dactyl-bottom-right
   (difference
@@ -1439,7 +1445,7 @@
          ;thumbcaps
          ;caps
          (difference
-            (union key-holes
+           (union key-holes
                   connectors
                   thumb
                   new-case)
