@@ -5,6 +5,9 @@
             [unicode-math.core :refer :all]
             [clojure.core.matrix.operators :refer [+ - / *]]))
 
+(def ^:const LEFT 1)
+(def ^:const RIGHT 2)
+
 ;;;;;;;;;;;;;;;;;
 ;; Switch Hole ;;
 ;;;;;;;;;;;;;;;;;
@@ -533,10 +536,13 @@
            (place (- right-wall-column 1) 4 (translate [0 1 1] wall-cube-bottom-front))
            (key-place 4 4 web-post-br)
            (key-place 5 4 web-post-bl))
-     (hull (place 0.721 4 (translate [0 1 -1.4] wall-cube-bottom-front))
+     (hull (place 0.75 4 (translate [0 1.73 -0.805] wall-cube-bottom-front))
            (place 1.5 4 (translate [0 1 1] wall-cube-bottom-front))
-           (key-place 1 4 web-post-bl)
-           (key-place 1 4 web-post-br)))))
+           (key-place 1 4 (translate [0.001 0 0] web-post-bl))
+           (key-place 1 4 (translate [0.001 0 0] web-post-br))))))
+
+          ; It's not clear why the above translateions of 0.001 units are needed
+          ; but they resolve an issue where the normals were invered.
 
 (def back-wall
   (let [step wall-step
@@ -1037,7 +1043,7 @@
                         (key-place 1 4 half-post-bl)
                         (key-place 1 4 half-post-br)
                         (bottom-place (- 2 1/2) 4 (translate [0 front-offset 1] wall-cube-bottom-front))
-                        (bottom-place 0.75 4 (translate [0 front-offset 0] wall-cube-bottom-front)))
+                        (bottom-place 0.75 4 (translate [0 (+ front-offset 0.65) 0] wall-cube-bottom-front)))
 
                        (hull
                         (thumb-place 0 -1 web-post-br)
@@ -1045,13 +1051,8 @@
                         (thumb-place thumb-right-wall thumb-front-row (translate [-1.12 thumb-front-offset thumb-ridge-height] wall-cube-bottom-front))
                         (key-place 1 4 (translate [2.5 -2 -0.8] web-post-bl))
                         (key-place 1 4 (translate [1.23 -4 0] web-post-bl))
-                        (key-place 1 4 half-post-bl))]
+                        (key-place 1 4 half-post-bl))]]
 
-         stands (let [bumper-diameter 9.6] ; 3/8 = 9.6 1/2 = 12.7
-                  [(stand-at bumper-diameter #(key-place 0 1 %))
-                   (stand-at bumper-diameter #(thumb-place 1 -1/2 %))
-                   (stand-at bumper-diameter #(key-place 5 0 %))
-                   (stand-at bumper-diameter #(key-place 5 3 %) )])]
      (apply union
             (concat
              main-keys-bottom
@@ -1063,8 +1064,48 @@
              thumb-back-wall
              thumb-left-wall
              thumb-front-wall
-             thumb-inside
-             stands)))))
+             thumb-inside)))))
+
+(defn stands-at [diameter]
+  (union
+    [(stand-at diameter #(key-place 0 1 %))
+     (stand-at diameter #(thumb-place 1 -1/2 %))
+     (stand-at diameter #(key-place 5 0 %))
+     (stand-at diameter #(key-place 5 3 %) )]))
+
+(defn stands-alignment-male [side]
+  (let
+    [hole (->> (cylinder 1.3 5)
+               (translate [0 0 -10.2])
+               (with-fn wall-sphere-n))]
+    (union [(if (= side RIGHT)
+              (translate [0 0 -7] (key-place 0 1 hole))
+              (key-place 0 1 hole))
+           (thumb-place 1 -1/2 hole)
+           (key-place 5 0 hole)
+           (key-place 5 3 hole)])))
+
+(defn stands-alignment-female [side]
+  (let
+    [hole (->> (cylinder 1.5 5)
+               (translate [0 0 -10])
+               (with-fn wall-sphere-n))]
+    (union [(if (= side RIGHT)
+              (translate [0 0 -7] (key-place 0 1 hole))
+              (key-place 0 1 hole))
+           (thumb-place 1 -1/2 hole)
+           (key-place 5 0 hole)
+           (key-place 5 3 hole)])))
+
+(defn stands-diff [shape]
+  (let [-tolerance (- 0.2)
+       diff (union
+              bottom-plate
+              (hull shape))]
+   (union (translate [0 -tolerance 0] diff)
+          (translate [-tolerance 0 0] diff))))
+
+(def stands (stands-at 9.8)) ; 3/8 = 9.6 1/2 = 12.7
 
 (def screw-hole (->> (cylinder 1.5 60)
                      (translate [0 0 3/2])
@@ -1443,34 +1484,37 @@
 ;; Final Export ;;
 ;;;;;;;;;;;;;;;;;;
 
+(def floor
+  (->> (cube 1000 1000 10)
+       (translate [0 0 -5])))
+
 (def dactyl-bottom-right
   (difference
-   (union
-    teensy-cover
-    (difference
-     bottom-plate
-     (hull teensy-cover)
-     case-alignment-female
-     case-tolerance
-     teensy-cover
-     trrs-cutout
-     (->> (cube 1000 1000 10) (translate [0 0 -5]))
-     screw-holes))
-   usb-cutout))
+    (union teensy-cover
+           (difference bottom-plate
+                       case-tolerance
+                       (hull teensy-cover)
+                       case-alignment-female
+                       teensy-cover
+                       trrs-cutout
+                       screw-holes
+                       floor))
+    (stands-alignment-female RIGHT)
+    usb-cutout))
 
 (def dactyl-bottom-left
   (mirror [-1 0 0]
-          (union
-           io-exp-cover
-           (difference
-            bottom-plate
-            (hull io-exp-cover)
-            case-tolerance
-            case-alignment-female
-            io-exp-cover
-            trrs-cutout
-            (->> (cube 1000 1000 10) (translate [0 0 -5]))
-           screw-holes))))
+    (difference
+      (union io-exp-cover
+            (difference bottom-plate
+                        case-tolerance
+                        (hull io-exp-cover)
+                        case-alignment-female
+                        io-exp-cover
+                        trrs-cutout
+                        screw-holes
+                        floor))
+      (stands-alignment-female LEFT))))
 
 (def dactyl-top-right
   (offset-case-place [0 0 0] (union
@@ -1503,6 +1547,18 @@
     (union palm-rest
            case-alignment-male)))
 
+(def dactyl-stands-left
+  (mirror [-1 0 0]
+    (union
+      (difference (stands-alignment-male LEFT)
+                  (translate [(- 0.2) 0 0] io-exp-cover))
+      (difference stands
+                  (stands-diff io-exp-cover)))))
+
+(def dactyl-stands-right
+  (union (stands-alignment-male RIGHT)
+         (difference stands
+                     (stands-diff teensy-cover))))
 
 (def dactyl-rest-right
   (union palm-rest
@@ -1511,11 +1567,13 @@
 (def dactyl-combined-left
   (union dactyl-top-left
          dactyl-bottom-left
+         dactyl-stands-left
          dactyl-rest-left))
 
 (def dactyl-combined-right
   (union dactyl-top-right
          dactyl-bottom-right
+         dactyl-stands-right
          dactyl-rest-right))
 
 (spit "things/dactyl-top-right.scad"
@@ -1523,6 +1581,9 @@
 
 (spit "things/dactyl-bottom-right.scad"
       (write-scad dactyl-bottom-right))
+
+(spit "things/dactyl-stands-right.scad"
+      (write-scad dactyl-stands-right))
 
 (spit "things/dactyl-rest-right.scad"
       (write-scad dactyl-rest-right))
@@ -1535,6 +1596,12 @@
 
 (spit "things/dactyl-bottom-left.scad"
       (write-scad dactyl-bottom-left))
+
+(spit "things/dactyl-stands-left.scad"
+      (write-scad dactyl-stands-left))
+
+(spit "things/dactyl-stands-right.scad"
+      (write-scad dactyl-stands-right))
 
 (spit "things/dactyl-rest-left.scad"
       (write-scad dactyl-rest-left))
