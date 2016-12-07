@@ -7,6 +7,8 @@
 
 (def ^:const LEFT 1)
 (def ^:const RIGHT 2)
+(def ^:const RESTS_SEPERATE true)
+(def ^:const STANDS_SEPERATE false)
 
 ;;;;;;;;;;;;;;;;;
 ;; Switch Hole ;;
@@ -445,7 +447,7 @@
   (concat (range start end step) [end]))
 
 (def wall-step 0.2)
-(def wall-sphere-n 20) ;;20 Sphere resolution, lower for faster renders
+(def wall-sphere-n 10) ;;20 Sphere resolution, lower for faster renders
 
 (defn wall-cube-at [coords]
   (->> (cube 3 3 3)
@@ -615,20 +617,20 @@
            (key-place 0 0 web-post-bl)
            (key-place 0 1 web-post-bl))
      (hull (place left-wall-column 2 (translate [1 0 1] wall-cube-bottom-back))
-           (place left-wall-column 1.71 (translate [1 0 1] wall-cube-bottom-front))
+           (place left-wall-column 1.71 (translate [1 0 3.5] wall-cube-bottom-front))
            (key-place 0 1 web-post-bl)
            (key-place 0 2 web-post-bl)))))
 
 (def left-inside-wall
   (let [place case-place]
     (union
-     (hull (place left-wall-column 1.71 (translate [1 0 1] wall-cube-bottom-front))
+     (hull (place left-wall-column 1.71 (translate [1 0 3] wall-cube-bottom-front))
            (key-place 0 2 web-post-bl)
            (key-place 0 3 web-post-tl))
-     (hull (place left-wall-column 1.71 (translate [2 0 1] wall-cube-bottom-front))
+     (hull (place left-wall-column 1.71 (translate [2 0 3] wall-cube-bottom-front))
            (thumb-place 1 1 web-post-tr)
            (key-place 0 3 web-post-tl)
-           (place left-wall-column 1.71 (translate [1 0 1] wall-cube-bottom-front))
+           (place left-wall-column 1.71 (translate [1 0 3] wall-cube-bottom-front))
            (thumb-place 1 1 web-post-tr)
            (thumb-place 1/2 thumb-back-y (translate [0 -1.7 thumb-case-z] wall-cube-bottom-back))
            (thumb-place 1/2 thumb-back-y (translate [1 -1.7 (- thumb-case-z 2.9)] wall-cube-bottom-back))))))
@@ -916,6 +918,7 @@
                       (key-place 0 0 web-post-bl)
                       (key-place 0 1 web-post-bl))
                 (hull (place left-wall-column 2 (translate [left-offset 0 0.7] wall-cube-bottom-back))
+                      (place left-wall-column 1.6666  (translate [left-offset 0 3] wall-cube-bottom-front))
                       (place left-wall-column 1.6666  (translate [left-offset 0 1] wall-cube-bottom-front))
                       (key-place 0 1 web-post-bl)
                       (key-place 0 2 web-post-bl))
@@ -977,10 +980,17 @@
                            (thumb-place 1 1 web-post-tl)
                            (thumb-place 2 1 web-post-tl))
                           (hull
-                           (thumb-place 1/2 thumb-back-y (translate [-0.2 thumb-back-offset thumb-ridge-height] wall-cube-bottom-back))
-                           (bottom-place left-wall-column 1.6666 (translate [left-offset 0 thumb-ridge-height] wall-cube-bottom-front))
+                           (thumb-place 1 1 web-post-tr)
                            (key-place 0 3 web-post-tl)
-                           (thumb-place 1 1 web-post-tr))
+                           (thumb-place 1 1 web-post-br)
+                           (key-place 0 3 web-post-bl)
+                           (thumb-place 1/2 thumb-back-y (translate [-0.2 thumb-back-offset thumb-ridge-height] wall-cube-bottom-back))
+                           (thumb-place 1/2 thumb-back-y (translate [-3.2 (+ thumb-back-offset 0.07) thumb-ridge-height] wall-cube-bottom-back))
+                           (bottom-place left-wall-column 1.6666 (translate [left-offset 0 (- thumb-ridge-height 0.2)] wall-cube-bottom-front))
+                           (key-place 0 3 web-post-tl)
+                           (thumb-place 1 1 web-post-tr)
+
+                           )
                           ]
          thumb-left-wall [(hull
                            (thumb-place thumb-left-wall-column thumb-back-y (translate [thumb-left-offset thumb-back-offset thumb-ridge-height] wall-cube-bottom-back))
@@ -1028,11 +1038,11 @@
                         (thumb-place 0 -1/2 web-post-tl)
                         (key-place 0 3 web-post-bl)
                         (thumb-place 0 -1/2 web-post-tr)
-                         (key-place 0 3 web-post-br)
-                         (key-place 1 3 web-post-bl)
-                         (thumb-place 0 -1/2 web-post-tr)
-                         (key-place 1 4 web-post-tl)
-                         (key-place 1 4 half-post-bl))
+                        (key-place 0 3 web-post-br)
+                        (key-place 1 3 web-post-bl)
+                        (thumb-place 0 -1/2 web-post-tr)
+                        (key-place 1 4 web-post-tl)
+                        (key-place 1 4 half-post-bl))
 
                        (hull
                         (thumb-place 0 -1/2 web-post-tr)
@@ -1098,7 +1108,7 @@
            (key-place 5 3 hole)])))
 
 (defn stands-diff [shape]
-  (let [-tolerance (- 0.2)
+  (let [-tolerance (if STANDS_SEPERATE (- 0.2) 0)
        diff (union
               bottom-plate
               (hull shape))]
@@ -1118,9 +1128,9 @@
    (thumb-place 2 -1/2 screw-hole)))
 
 (defn circuit-cover [width length height]
-  (let [cover-sphere-radius 1
+  (let [cover-sphere-radius 2
         cover-sphere (->> (sphere cover-sphere-radius)
-                          (with-fn 20))
+                          (with-fn 2))
         cover-sphere-z (+ (- height) (- cover-sphere-radius))
         cover-sphere-x (+ (/ width 2) cover-sphere-radius)
         cover-sphere-y (+ (/ length 2) (+ cover-sphere-radius))
@@ -1338,7 +1348,7 @@
         p1 [25 14]
         p2 [7 30]
         stand-diameter 9.6
-        rest-sphere-n 180 ; 30 for faster renders, 170 for printing
+        rest-sphere-n 170 ; 30 for faster renders, 170 for printing
         profile-sphere-n (* rest-sphere-n 2)
         floor (->> (cube 300 300 50)
                    (translate [0 0 -25]))
@@ -1476,8 +1486,8 @@
         (translate [-0.8 -1.75 -1.75] shape)
         (mirror [-1 0 0] shape)))))
 
-(def case-alignment-male (rest-alignment-shapes 1 2))
-(def case-alignment-female (rest-alignment-shapes (+ tolerance 1) 3))
+(def rest-alignment-male (rest-alignment-shapes 1 2))
+(def rest-alignment-female (rest-alignment-shapes (+ tolerance 1) 3))
 
 
 ;;;;;;;;;;;;;;;;;;
@@ -1488,81 +1498,98 @@
   (->> (cube 1000 1000 10)
        (translate [0 0 -5])))
 
-(def dactyl-bottom-right
-  (difference
-    (union teensy-cover
-           (difference bottom-plate
-                       case-tolerance
-                       (hull teensy-cover)
-                       case-alignment-female
-                       teensy-cover
-                       trrs-cutout
-                       screw-holes
-                       floor))
-    (stands-alignment-female RIGHT)
-    usb-cutout))
-
-(def dactyl-bottom-left
-  (mirror [-1 0 0]
-    (difference
-      (union io-exp-cover
-            (difference bottom-plate
-                        case-tolerance
-                        (hull io-exp-cover)
-                        case-alignment-female
-                        io-exp-cover
-                        trrs-cutout
-                        screw-holes
-                        floor))
-      (stands-alignment-female LEFT))))
-
-(def dactyl-top-right
-  (offset-case-place [0 0 0] (union
-     ; thumbcaps
-     ; caps
-     (difference
-       (union key-holes
-              connectors
-              thumb
-              new-case
-              teensy-support)
-       trrs-hole-just-circle
-       screw-holes))))
-
-(def dactyl-top-left
-  (mirror [-1 0 0]
-      (offset-case-place [0 0 0] (union
-         ;thumbcaps
-         ; caps
-         (difference
-           (union key-holes
-                  connectors
-                  thumb
-                  new-case)
-           trrs-hole-just-circle
-           screw-holes)))))
-
-(def dactyl-rest-left
-  (mirror [-1 0 0]
-    (union palm-rest
-           case-alignment-male)))
-
 (def dactyl-stands-left
   (mirror [-1 0 0]
-    (union
-      (difference (stands-alignment-male LEFT)
-                  (translate [(- 0.2) 0 0] io-exp-cover))
+    (if STANDS_SEPERATE
+      (union
+        (difference (stands-alignment-male LEFT)
+                    (translate [(- 0.2) 0 0] io-exp-cover))
+        (difference stands
+                    (stands-diff io-exp-cover)))
       (difference stands
                   (stands-diff io-exp-cover)))))
 
 (def dactyl-stands-right
-  (union (stands-alignment-male RIGHT)
-         (difference stands
-                     (stands-diff teensy-cover))))
+  (if STANDS_SEPERATE
+    (union (stands-alignment-male RIGHT)
+           (difference stands
+                       (stands-diff teensy-cover)))
+    (difference stands
+               (stands-diff teensy-cover))))
+
+(def dactyl-rest-left
+  (mirror [-1 0 0]
+    (union palm-rest
+           rest-alignment-male)))
 
 (def dactyl-rest-right
   (union palm-rest
-         case-alignment-male))
+         rest-alignment-male))
+
+(def dactyl-keycaps-left
+  (mirror [-1 0 0]
+      (union thumbcaps caps)))
+
+(def dactyl-keycaps-right
+      (union thumbcaps caps))
+
+(def dactyl-bottom-right
+  (union
+    (if-not RESTS_SEPERATE dactyl-rest-right)
+    (if-not STANDS_SEPERATE dactyl-stands-right)
+    (difference
+      (union teensy-cover
+             (difference bottom-plate
+                         case-tolerance
+                         (hull teensy-cover)
+                         rest-alignment-female
+                         teensy-cover
+                         trrs-cutout
+                         screw-holes
+                         floor))
+      (stands-alignment-female RIGHT)
+      usb-cutout)))
+
+(def dactyl-bottom-left
+  (union
+    (if-not RESTS_SEPERATE dactyl-rest-left)
+    (if-not STANDS_SEPERATE dactyl-stands-left)
+    (mirror [-1 0 0]
+      (difference
+        (union io-exp-cover
+              (difference bottom-plate
+                          case-tolerance
+                          (hull io-exp-cover)
+                          rest-alignment-female
+                          io-exp-cover
+                          trrs-cutout
+                          screw-holes
+                          floor))
+        (stands-alignment-female LEFT)))))
+
+(def dactyl-top-right
+  (offset-case-place [0 0 0]
+    (union
+      (difference
+        (union key-holes
+              connectors
+              thumb
+              new-case
+              teensy-support)
+      trrs-hole-just-circle
+      screw-holes))))
+
+(def dactyl-top-left
+  (mirror [-1 0 0]
+    (offset-case-place [0 0 0]
+      (union
+        (difference
+          (union key-holes
+                 connectors
+                 thumb
+                 new-case)
+          trrs-hole-just-circle
+          screw-holes)))))
 
 (def dactyl-combined-left
   (union dactyl-top-left
@@ -1576,17 +1603,15 @@
          dactyl-stands-right
          dactyl-rest-right))
 
+;;;;;;;;;;;;;
+;; Outputs ;;
+;;;;;;;;;;;;;
+
 (spit "things/dactyl-top-right.scad"
       (write-scad dactyl-top-right))
 
 (spit "things/dactyl-bottom-right.scad"
       (write-scad dactyl-bottom-right))
-
-(spit "things/dactyl-stands-right.scad"
-      (write-scad dactyl-stands-right))
-
-(spit "things/dactyl-rest-right.scad"
-      (write-scad dactyl-rest-right))
 
 (spit "things/dactyl-combined-right.scad"
       (write-scad dactyl-combined-right))
@@ -1597,14 +1622,25 @@
 (spit "things/dactyl-bottom-left.scad"
       (write-scad dactyl-bottom-left))
 
-(spit "things/dactyl-stands-left.scad"
-      (write-scad dactyl-stands-left))
-
-(spit "things/dactyl-stands-right.scad"
-      (write-scad dactyl-stands-right))
-
-(spit "things/dactyl-rest-left.scad"
-      (write-scad dactyl-rest-left))
-
 (spit "things/dactyl-combined-left.scad"
       (write-scad dactyl-combined-left))
+
+(spit "things/dactyl-keycaps-left.scad"
+      (write-scad dactyl-keycaps-left))
+
+(spit "things/dactyl-keycaps-right.scad"
+      (write-scad dactyl-keycaps-right))
+
+(if RESTS_SEPERATE
+  (spit "things/dactyl-rest-left.scad"
+        (write-scad dactyl-rest-left))
+
+  (spit "things/dactyl-rest-right.scad"
+        (write-scad dactyl-rest-right)))
+
+(if STANDS_SEPERATE
+  ((spit "things/dactyl-stands-left.scad"
+        (write-scad dactyl-stands-left))
+
+  (spit "things/dactyl-stands-right.scad"
+        (write-scad dactyl-stands-right))))
