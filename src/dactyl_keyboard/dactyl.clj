@@ -7,6 +7,7 @@
 
 (def ^:const LEFT 1)
 (def ^:const RIGHT 2)
+(def ^:const FAST_RENDER true)
 (def ^:const RESTS_SEPERATE true)
 (def ^:const STANDS_SEPERATE false)
 
@@ -447,7 +448,7 @@
   (concat (range start end step) [end]))
 
 (def wall-step 0.2)
-(def wall-sphere-n 10) ;;20 Sphere resolution, lower for faster renders
+(def wall-sphere-n (if FAST_RENDER 10 20))
 
 (defn wall-cube-at [coords]
   (->> (cube 3 3 3)
@@ -1081,7 +1082,7 @@
     [(stand-at diameter #(key-place 0 1 %))
      (stand-at diameter #(thumb-place 1 -1/2 %))
      (stand-at diameter #(key-place 5 0 %))
-     (stand-at diameter #(key-place 5 3 %) )]))
+     (stand-at diameter #(key-place 5 3 %))]))
 
 (defn stands-alignment-male [side]
   (let
@@ -1286,31 +1287,32 @@
     (union
       (place [0 0 0] case-inside-cutout)
       (place [0 0 0] new-case)
-      (place [0 0 -t] new-case)
-      (place [t2 -t -tq] front-wall)
-      (place [t t -th] front-wall)
-      (place [0 -t -th] front-wall)
-      (place [-t 0 -t] right-wall)
-      (place [t 0 -t] right-wall)
-      (place [0 th -th] back-wall)
-      (place [0 -th -th] back-wall)
-      (place [-45 50 54.3] (rotate (/ π 5.5) [1 0 0] (cube 10 10 10)))
-      (place [80 49 29.83] (rotate (/ π 5.5) [1 0 0] (cube 10 10 10)))
-      (place [-t -t -t] left-wall)
-      (place [t 0 -t2] left-wall)
-      (place [-t 0 0] left-inside-wall)
-      (place [-t 0 -t] left-inside-wall)
-      (place [-t -t -t] left-inside-wall)
-      (place [0 -t -t2] thumb-back-wall)
-      (place [-t t -th] thumb-back-wall)
-      (place [0 t -t] thumb-back-wall)
-      (place [t 0 (* -t 1.5)] thumb-left-wall)
-      (place [-t 0 -t] thumb-left-wall)
-      (place [t t -t] thumb-inside-wall)
-      (place [-t 0 -t] thumb-inside-wall)
-      (place [-t t -t] thumb-front-wall)
-      (place [t 0 -t] thumb-front-wall)
-      (place [0 (* 2 -t) -t] thumb-front-wall))))
+      (if-not FAST_RENDER (
+        (place [0 0 -t] new-case)
+        (place [t2 -t -tq] front-wall)
+        (place [t t -th] front-wall)
+        (place [0 -t -th] front-wall)
+        (place [-t 0 -t] right-wall)
+        (place [t 0 -t] right-wall)
+        (place [0 th -th] back-wall)
+        (place [0 -th -th] back-wall)
+        (place [-45 50 54.3] (rotate (/ π 5.5) [1 0 0] (cube 10 10 10)))
+        (place [80 49 29.83] (rotate (/ π 5.5) [1 0 0] (cube 10 10 10)))
+        (place [-t -t -t] left-wall)
+        (place [t 0 -t2] left-wall)
+        (place [-t 0 0] left-inside-wall)
+        (place [-t 0 -t] left-inside-wall)
+        (place [-t -t -t] left-inside-wall)
+        (place [0 -t -t2] thumb-back-wall)
+        (place [-t t -th] thumb-back-wall)
+        (place [0 t -t] thumb-back-wall)
+        (place [t 0 (* -t 1.5)] thumb-left-wall)
+        (place [-t 0 -t] thumb-left-wall)
+        (place [t t -t] thumb-inside-wall)
+        (place [-t 0 -t] thumb-inside-wall)
+        (place [-t t -t] thumb-front-wall)
+        (place [t 0 -t] thumb-front-wall)
+        (place [0 (* 2 -t) -t] thumb-front-wall))))))
 
 
 ;;;;;;;;;;;;;;;;
@@ -1348,7 +1350,7 @@
         p1 [25 14]
         p2 [7 30]
         stand-diameter 9.6
-        rest-sphere-n 170 ; 30 for faster renders, 170 for printing
+        rest-sphere-n (if FAST_RENDER 20 170)
         profile-sphere-n (* rest-sphere-n 2)
         floor (->> (cube 300 300 50)
                    (translate [0 0 -25]))
@@ -1613,23 +1615,24 @@
 (spit "things/dactyl-bottom-right.scad"
       (write-scad dactyl-bottom-right))
 
-(spit "things/dactyl-combined-right.scad"
-      (write-scad dactyl-combined-right))
-
 (spit "things/dactyl-top-left.scad"
       (write-scad dactyl-top-left))
 
 (spit "things/dactyl-bottom-left.scad"
       (write-scad dactyl-bottom-left))
 
-(spit "things/dactyl-combined-left.scad"
-      (write-scad dactyl-combined-left))
-
 (spit "things/dactyl-keycaps-left.scad"
       (write-scad dactyl-keycaps-left))
 
 (spit "things/dactyl-keycaps-right.scad"
       (write-scad dactyl-keycaps-right))
+
+(if-not FAST_RENDER
+  ((spit "things/dactyl-combined-right.scad"
+      (write-scad dactyl-combined-right))
+
+  (spit "things/dactyl-combined-left.scad"
+        (write-scad dactyl-combined-left))))
 
 (if RESTS_SEPERATE
   (spit "things/dactyl-rest-left.scad"
