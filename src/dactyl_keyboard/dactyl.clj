@@ -9,7 +9,7 @@
 (def ^:const RIGHT 2)
 (def ^:const FAST_RENDER true)
 (def ^:const RESTS_SEPERATE true)
-(def ^:const STANDS_SEPERATE false)
+(def ^:const STANDS_SEPERATE true)
 
 ;;;;;;;;;;;;;;;;;
 ;; Switch Hole ;;
@@ -1079,27 +1079,15 @@
 
 (defn stands-at [diameter]
   (union
-    [(stand-at diameter #(key-place 0 1 %))
+    [(stand-at diameter #(key-place -0.05 1 %))
      (stand-at diameter #(thumb-place 1 -1/2 %))
      (stand-at diameter #(key-place 5 0 %))
      (stand-at diameter #(key-place 5 3 %))]))
 
-(defn stands-alignment-male [side]
+(defn stands-alignment [side]
   (let
-    [hole (->> (cylinder 1.3 5)
-               (translate [0 0 -10.2])
-               (with-fn wall-sphere-n))]
-    (union [(if (= side RIGHT)
-              (translate [0 0 -7] (key-place 0 1 hole))
-              (key-place 0 1 hole))
-           (thumb-place 1 -1/2 hole)
-           (key-place 5 0 hole)
-           (key-place 5 3 hole)])))
-
-(defn stands-alignment-female [side]
-  (let
-    [hole (->> (cylinder 1.5 5)
-               (translate [0 0 -10])
+    [hole (->> (cylinder 2 15)
+               (translate [0 0 -8])
                (with-fn wall-sphere-n))]
     (union [(if (= side RIGHT)
               (translate [0 0 -7] (key-place 0 1 hole))
@@ -1287,32 +1275,33 @@
     (union
       (place [0 0 0] case-inside-cutout)
       (place [0 0 0] new-case)
-      (if-not FAST_RENDER (
-        (place [0 0 -t] new-case)
-        (place [t2 -t -tq] front-wall)
-        (place [t t -th] front-wall)
-        (place [0 -t -th] front-wall)
-        (place [-t 0 -t] right-wall)
-        (place [t 0 -t] right-wall)
-        (place [0 th -th] back-wall)
-        (place [0 -th -th] back-wall)
-        (place [-45 50 54.3] (rotate (/ π 5.5) [1 0 0] (cube 10 10 10)))
-        (place [80 49 29.83] (rotate (/ π 5.5) [1 0 0] (cube 10 10 10)))
-        (place [-t -t -t] left-wall)
-        (place [t 0 -t2] left-wall)
-        (place [-t 0 0] left-inside-wall)
-        (place [-t 0 -t] left-inside-wall)
-        (place [-t -t -t] left-inside-wall)
-        (place [0 -t -t2] thumb-back-wall)
-        (place [-t t -th] thumb-back-wall)
-        (place [0 t -t] thumb-back-wall)
-        (place [t 0 (* -t 1.5)] thumb-left-wall)
-        (place [-t 0 -t] thumb-left-wall)
-        (place [t t -t] thumb-inside-wall)
-        (place [-t 0 -t] thumb-inside-wall)
-        (place [-t t -t] thumb-front-wall)
-        (place [t 0 -t] thumb-front-wall)
-        (place [0 (* 2 -t) -t] thumb-front-wall))))))
+      (if-not FAST_RENDER
+        (union
+          (place [0 0 -t] new-case)
+          (place [t2 -t -tq] front-wall)
+          (place [t t -th] front-wall)
+          (place [0 -t -th] front-wall)
+          (place [-t 0 -t] right-wall)
+          (place [t 0 -t] right-wall)
+          (place [0 th -th] back-wall)
+          (place [0 -th -th] back-wall)
+          (place [-45 50 54.3] (rotate (/ π 5.5) [1 0 0] (cube 10 10 10)))
+          (place [80 49 29.83] (rotate (/ π 5.5) [1 0 0] (cube 10 10 10)))
+          (place [-t -t -t] left-wall)
+          (place [t 0 -t2] left-wall)
+          (place [-t 0 0] left-inside-wall)
+          (place [-t 0 -t] left-inside-wall)
+          (place [-t -t -t] left-inside-wall)
+          (place [0 -t -t2] thumb-back-wall)
+          (place [-t t -th] thumb-back-wall)
+          (place [0 t -t] thumb-back-wall)
+          (place [t 0 (* -t 1.5)] thumb-left-wall)
+          (place [-t 0 -t] thumb-left-wall)
+          (place [t t -t] thumb-inside-wall)
+          (place [-t 0 -t] thumb-inside-wall)
+          (place [-t t -t] thumb-front-wall)
+          (place [t 0 -t] thumb-front-wall)
+          (place [0 (* 2 -t) -t] thumb-front-wall))))))
 
 
 ;;;;;;;;;;;;;;;;
@@ -1344,6 +1333,13 @@
        (do (->> (difference (polygon [[0 0] p0 p1 p2 [0 h]])
                             (bezier-conic p0 p1 p2 steps))
                 (extrude-rotate {:fn steps}))))))
+
+(defn front-palm-rest-rotate [shape]
+  (->> shape
+    (rotate (/ π 1) [1 0 0])
+    (rotate (/ π 2) [0 0 1])
+    (rotate (/ π 4) [-1 0 0])
+    (rotate (/ π 6.8) [0 1 0])))
 
 (def palm-rest
   (let [p0 [15 0]
@@ -1409,12 +1405,9 @@
 
         stand-place #(translate [24 -60 0] %)
 
-        front-rect (->> (prism 15 7 50 5 -2)
-                        (rotate (/ π 1) [1 0 0])
-                        (rotate (/ π 2) [0 0 1])
-                        (rotate (/ π 4) [-1 0 0])
-                        (rotate (/ π 6.8) [0 1 0])
-                        (translate [17.5 15 35])
+        front-rect (->> (prism 15 9 50 5 -2)
+                        front-palm-rest-rotate
+                        (translate [15.5 15 35])
                         stand-place)
 
         front-rect-diff (->> (cube 100 30 30)
@@ -1455,42 +1448,34 @@
                          (rotate (/ π 2) [0 0 1])
                          (translate [0 -19.3 1])
                          stand-place)
-        stands (difference (union front-rect
-                                  (translate [48 0 0] (mirror [-1 0 0] front-rect))
-                                  bottom-rect
-                                  inner-support
-                                  back-neg-rect
-                                  back-pos-rect-1
-                                  back-pos-rect-2)
-                           (translate [0 (- tolerance) 0] bottom-plate)
-                           back-neg-rect-diff
-                           bottom-plate
-                           case-tolerance
-                           front-rect-diff
-                           floor)]
+        stands (difference
+                 (union front-rect
+                        (translate [48 0 0] (mirror [-1 0 0] front-rect))
+                        bottom-rect
+                        inner-support
+                        back-neg-rect
+                        back-pos-rect-1
+                        back-pos-rect-2)
+               back-neg-rect-diff
+               bottom-plate
+               (if RESTS_SEPERATE
+                 (do case-tolerance
+                     (translate [0 (- tolerance) 0] bottom-plate)))
+               front-rect-diff
+               floor)]
     (union stands
            rest-shape)))
 
+(def rest-alignment
+  (let [shape (->> (cylinder 2 20)
+                   front-palm-rest-rotate
+                   (translate [13.5 0 0])
+                   (with-fn 20))]
 
-(defn rest-alignment-shapes [d h]
-  (let [shape (difference
-                (->> (cylinder d h)
-                     (rotate (/ π 2) [0 0 1])
-                     (rotate (/ π 4) [-1 0 0])
-                     (translate [14.5 0 0])
-                     (with-fn 20))
-                (->> (cube 10 10 10)
-                     (rotate (/ π 5) [-1 0 0])
-                     (translate [14.5 2 7.5])))]
-
-    (translate [24 -51 19]
+    (translate [24 -51 18]
       (union
         (translate [-0.8 -1.75 -1.75] shape)
         (mirror [-1 0 0] shape)))))
-
-(def rest-alignment-male (rest-alignment-shapes 1 2))
-(def rest-alignment-female (rest-alignment-shapes (+ tolerance 1) 3))
-
 
 ;;;;;;;;;;;;;;;;;;
 ;; Final Export ;;
@@ -1503,30 +1488,24 @@
 (def dactyl-stands-left
   (mirror [-1 0 0]
     (if STANDS_SEPERATE
-      (union
-        (difference (stands-alignment-male LEFT)
-                    (translate [(- 0.2) 0 0] io-exp-cover))
-        (difference stands
-                    (stands-diff io-exp-cover)))
       (difference stands
+                  (stands-alignment LEFT)
                   (stands-diff io-exp-cover)))))
 
 (def dactyl-stands-right
   (if STANDS_SEPERATE
-    (union (stands-alignment-male RIGHT)
-           (difference stands
-                       (stands-diff teensy-cover)))
     (difference stands
+               (stands-alignment RIGHT)
                (stands-diff teensy-cover))))
 
 (def dactyl-rest-left
   (mirror [-1 0 0]
-    (union palm-rest
-           rest-alignment-male)))
+    (difference palm-rest
+                (if RESTS_SEPERATE rest-alignment))))
 
 (def dactyl-rest-right
-  (union palm-rest
-         rest-alignment-male))
+  (difference palm-rest
+                (if RESTS_SEPERATE rest-alignment)))
 
 (def dactyl-keycaps-left
   (mirror [-1 0 0]
@@ -1544,12 +1523,12 @@
              (difference bottom-plate
                          case-tolerance
                          (hull teensy-cover)
-                         rest-alignment-female
+                          (if RESTS_SEPERATE rest-alignment)
                          teensy-cover
                          trrs-cutout
                          screw-holes
                          floor))
-      (stands-alignment-female RIGHT)
+      (if STANDS_SEPERATE (stands-alignment RIGHT))
       usb-cutout)))
 
 (def dactyl-bottom-left
@@ -1562,12 +1541,12 @@
               (difference bottom-plate
                           case-tolerance
                           (hull io-exp-cover)
-                          rest-alignment-female
+                          (if RESTS_SEPERATE rest-alignment)
                           io-exp-cover
                           trrs-cutout
                           screw-holes
                           floor))
-        (stands-alignment-female LEFT)))))
+        (if STANDS_SEPERATE (stands-alignment LEFT))))))
 
 (def dactyl-top-right
   (offset-case-place [0 0 0]
@@ -1627,23 +1606,18 @@
 (spit "things/dactyl-keycaps-right.scad"
       (write-scad dactyl-keycaps-right))
 
-(if-not FAST_RENDER
-  ((spit "things/dactyl-combined-right.scad"
-      (write-scad dactyl-combined-right))
-
-  (spit "things/dactyl-combined-left.scad"
-        (write-scad dactyl-combined-left))))
-
 (if RESTS_SEPERATE
-  (spit "things/dactyl-rest-left.scad"
-        (write-scad dactyl-rest-left))
+  (do
+    (spit "things/dactyl-rest-left.scad"
+          (write-scad dactyl-rest-left))
 
-  (spit "things/dactyl-rest-right.scad"
-        (write-scad dactyl-rest-right)))
+    (spit "things/dactyl-rest-right.scad"
+          (write-scad dactyl-rest-right))))
 
 (if STANDS_SEPERATE
-  ((spit "things/dactyl-stands-left.scad"
-        (write-scad dactyl-stands-left))
+  (do
+   (spit "things/dactyl-stands-left.scad"
+         (write-scad dactyl-stands-left))
 
-  (spit "things/dactyl-stands-right.scad"
-        (write-scad dactyl-stands-right))))
+   (spit "things/dactyl-stands-right.scad"
+         (write-scad dactyl-stands-right))))
