@@ -10,15 +10,19 @@
 
 (def left
   (union
-    (import "../things/assets-combined/dactyl-top-left.stl")
-    (import "../things/assets-combined/dactyl-bottom-left.stl")
-    (import "../things/assets-combined/dactyl-keycaps-left.stl")))
+    (import "../things/assets-seperated/dactyl-top-left.stl")
+    (import "../things/assets-seperated/dactyl-bottom-left.stl")
+    (import "../things/assets-seperated/dactyl-stands-left.stl")
+    (import "../things/assets-seperated/dactyl-rest-left.stl")
+    (import "../things/assets-seperated/dactyl-keycaps-left.stl")))
 
 (def right
   (union
-    (import "../things/assets-combined/dactyl-top-right.stl")
-    (import "../things/assets-combined/dactyl-bottom-right.stl")
-    (import "../things/assets-combined/dactyl-keycaps-right.stl")))
+    (import "../things/assets-seperated/dactyl-top-right.stl")
+    (import "../things/assets-seperated/dactyl-bottom-right.stl")
+    (import "../things/assets-seperated/dactyl-stands-right.stl")
+    (import "../things/assets-seperated/dactyl-rest-right.stl")
+    (import "../things/assets-seperated/dactyl-keycaps-right.stl")))
 
 (def presentation
   (union

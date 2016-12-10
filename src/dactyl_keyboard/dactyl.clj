@@ -7,7 +7,7 @@
 
 (def ^:const LEFT 1)
 (def ^:const RIGHT 2)
-(def ^:const FAST_RENDER true)
+(def ^:const FAST_RENDER false)
 (def ^:const RESTS_SEPERATE true)
 (def ^:const STANDS_SEPERATE true)
 
@@ -1571,18 +1571,6 @@
                  new-case)
           trrs-hole-just-circle
           screw-holes)))))
-
-(def dactyl-combined-left
-  (union dactyl-top-left
-         dactyl-bottom-left
-         dactyl-stands-left
-         dactyl-rest-left))
-
-(def dactyl-combined-right
-  (union dactyl-top-right
-         dactyl-bottom-right
-         dactyl-stands-right
-         dactyl-rest-right))
 
 ;;;;;;;;;;;;;
 ;; Outputs ;;
