@@ -1079,7 +1079,7 @@
 
 (defn stands-at [diameter]
   (union
-    [(stand-at diameter #(key-place -0.05 1 %))
+    [(stand-at diameter #(key-place 0.06 1 %))
      (stand-at diameter #(thumb-place 1 -1/2 %))
      (stand-at diameter #(key-place 5 0 %))
      (stand-at diameter #(key-place 5 3 %))]))
@@ -1090,8 +1090,8 @@
                (translate [0 0 -8])
                (with-fn wall-sphere-n))]
     (union [(if (= side RIGHT)
-              (translate [0 0 -7] (key-place 0 1 hole))
-              (key-place 0 1 hole))
+              (translate [0 0 -7] (key-place 0.06 1 hole))
+              (key-place 0.06 1 hole))
            (thumb-place 1 -1/2 hole)
            (key-place 5 0 hole)
            (key-place 5 3 hole)])))
@@ -1495,8 +1495,10 @@
 (def dactyl-stands-right
   (if STANDS_SEPERATE
     (difference stands
-               (stands-alignment RIGHT)
-               (stands-diff teensy-cover))))
+                (stands-alignment RIGHT)
+                (stands-diff (key-place 0 1 (cube 10 10 10)))
+                (stands-diff (key-place 0 1 (translate [0 0 -5] (cube 15 15 15) )))
+                (stands-diff teensy-cover))))
 
 (def dactyl-rest-left
   (mirror [-1 0 0]

@@ -20495,7 +20495,7 @@ translate ([0, 0, 0]) {
                         rotate (a=22.5, v=[1, 0, 0]) {
                           translate ([0, 0, -82.96861330108649]) {
                             translate ([0, 0, 3/2]) {
-                              cylinder ($fn=20, h=60, r=1.5, center=true);
+                              cylinder ($fn=10, h=60, r=1.5, center=true);
                             }
                           }
                         }
@@ -20516,7 +20516,7 @@ translate ([0, 0, 0]) {
                         rotate (a=-22.5, v=[1, 0, 0]) {
                           translate ([0, 0, -82.96861330108649]) {
                             translate ([0, 0, 3/2]) {
-                              cylinder ($fn=20, h=60, r=1.5, center=true);
+                              cylinder ($fn=10, h=60, r=1.5, center=true);
                             }
                           }
                         }
@@ -20538,7 +20538,7 @@ translate ([0, 0, 0]) {
                           rotate (a=-7.499999999999999, v=[1, 0, 0]) {
                             translate ([0, 0, -84.88393769497159]) {
                               translate ([0, 0, 3/2]) {
-                                cylinder ($fn=20, h=60, r=1.5, center=true);
+                                cylinder ($fn=10, h=60, r=1.5, center=true);
                               }
                             }
                           }
