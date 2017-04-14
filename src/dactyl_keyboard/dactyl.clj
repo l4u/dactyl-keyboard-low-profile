@@ -8,8 +8,8 @@
 (def ^:const LEFT 1)
 (def ^:const RIGHT 2)
 (def ^:const FAST_RENDER false)
-(def ^:const RESTS_SEPERATE true)
-(def ^:const STANDS_SEPERATE true)
+(def ^:const RESTS_SEPERATE false)
+(def ^:const STANDS_SEPERATE false)
 
 ;;;;;;;;;;;;;;;;;
 ;; Switch Hole ;;
@@ -1256,7 +1256,7 @@
 ;; Tolerances ;;
 ;;;;;;;;;;;;;;;;
 
-(def tolerance 0.3)
+(def tolerance 0.2)
 
 (defn offset-case-place [offset block]
   (->> block
@@ -1487,18 +1487,17 @@
 
 (def dactyl-stands-left
   (mirror [-1 0 0]
-    (if STANDS_SEPERATE
-      (difference stands
-                  (stands-alignment LEFT)
-                  (stands-diff io-exp-cover)))))
+    (difference stands
+                (if STANDS_SEPERATE (stands-alignment LEFT)
+                   (stands-diff io-exp-cover)))))
 
 (def dactyl-stands-right
-  (if STANDS_SEPERATE
-    (difference stands
-                (stands-alignment RIGHT)
-                (stands-diff (key-place 0 1 (cube 10 10 10)))
-                (stands-diff (key-place 0 1 (translate [0 0 -5] (cube 15 15 15) )))
-                (stands-diff teensy-cover))))
+  (difference stands
+              (stands-diff teensy-cover)
+              (if STANDS_SEPERATE
+                ((stands-alignment RIGHT)
+                 (stands-diff (key-place 0 1 (cube 10 10 10)))
+                 (stands-diff (key-place 0 1 (translate [0 0 -5] (cube 15 15 15) )))))))
 
 (def dactyl-rest-left
   (mirror [-1 0 0]
