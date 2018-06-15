@@ -8,7 +8,6 @@
 (def ^:const LEFT 1)
 (def ^:const RIGHT 2)
 (def ^:const FAST_RENDER false)
-(def ^:const RESTS_SEPERATE false)
 (def ^:const STANDS_SEPERATE false)
 
 ;;;;;;;;;;;;;;;;;
@@ -115,13 +114,13 @@
                               (rotate (* α (- 2 row)) [1 0 0])
                               (translate [0 0 row-radius]))
         column-row-offset (cond
-                        (= column 2) [0 2.4 -4.5]
-                        (= column 4) [0 -5.8 5.64]
-                        (and (= column 5) (not= row 4)) [5.2 -5.8 7.01]
-                        (and (= column 5) (= row 4)) [0.5 -5.8 5.7]
-                        (and (= column 6) (= row 4)) [8.9 -5.8 8] ; extended connector
-                        (= column 6) [9 -5.8 8] ; extended connector
-                        :else [0 0 0])
+                            (= column 2) [0 2.4 -4.5]
+                            (= column 4) [0 -5.8 5.64]
+                            (and (= column 5) (not= row 4)) [5.2 -5.8 7.01]
+                            (and (= column 5) (= row 4)) [0.5 -5.8 5.7]
+                            (and (= column 6) (= row 4)) [8.9 -5.8 8] ; extended connector
+                            (= column 6) [9 -5.8 8] ; extended connector
+                            :else [0 0 0])
         column-angle (* β (- 2 column))
         placed-shape (->> row-placed-shape
                           (translate [0 0 (- column-radius)])
@@ -164,10 +163,10 @@
                               (rotate (* α (- 2 row)) [1 0 0])
                               (translate [0 0 row-radius]))
         column-offset (cond (< column 1.5) [-1 0 0]
-                       :else [0 0 0])
+                            :else [0 0 0])
         column-row-offset (if (not= column 6) [0 -4.35 4.8]
-                        (if (not= row 4) [-7.25 -5.8 2.1]
-                                         [-7.89 -5.8 3.6]))
+                              (if (not= row 4) [-7.25 -5.8 2.1]
+                                  [-7.89 -5.8 3.6]))
         column-angle (* β (- 2 column))
         placed-shape (->> row-placed-shape
                           (translate [0 0 (- column-radius)])
@@ -216,7 +215,6 @@
                  [4 5 1] [1 0 4]
                  [1 5 2] [2 5 6]
                  [4 0 3] [7 4 3]])))
-
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; Web Connectors ;;
@@ -290,8 +288,8 @@
                             (Math/sin (/ β 2)))
                          cap-top-height)
         #_(+ (/ (/ (+ pillar-width 5) 2)
-                            (Math/sin (/ β 2)))
-                         cap-top-height)]
+                (Math/sin (/ β 2)))
+             cap-top-height)]
     (->> shape
          (translate [0 0 (- row-radius)])
          (rotate (* α row) [1 0 0])
@@ -459,19 +457,19 @@
 
 (defn wall-cube-bottom [front-to-back-scale]
   (wall-cube-at [0
-                   (scale-to-range
-                    (+ (/ mount-height -2) -3.5)
-                    (+ (/ mount-height 2) 5.0)
-                    front-to-back-scale)
-                   -6])) ; was -6, then 2
+                 (scale-to-range
+                  (+ (/ mount-height -2) -3.5)
+                  (+ (/ mount-height 2) 5.0)
+                  front-to-back-scale)
+                 -6])) ; was -6, then 2
 
 (defn wall-cube-top [front-to-back-scale]
   (wall-cube-at [0
-                   (scale-to-range
-                    (+ (/ mount-height -2) -3.5)
-                    (+ (/ mount-height 2) 3.5)
-                    front-to-back-scale)
-                   4])) ; case height
+                 (scale-to-range
+                  (+ (/ mount-height -2) -3.5)
+                  (+ (/ mount-height 2) 3.5)
+                  front-to-back-scale)
+                 4])) ; case height
 
 (def wall-cube-top-back (wall-cube-top 1))
 (def wall-cube-bottom-back (wall-cube-bottom 1))
@@ -479,9 +477,9 @@
 (def wall-cube-top-front (wall-cube-top 0))
 
 (defn top-case-cover [place-fn sphere
-                 x-start x-end
-                 y-start y-end
-                 step]
+                      x-start x-end
+                      y-start y-end
+                      step]
   (apply union
          (for [x (range-inclusive x-start (- x-end step) step)
                y (range-inclusive y-start (- y-end step) step)]
@@ -492,21 +490,21 @@
 
 (def case-back-cutout
   (let [a (+ mount-width 8)]
-      (->> (prism a a a 0 6)
-           (rotate π [0 0 1])
-           (rotate (/ π 15) [1 0 0])
-           (translate [(/ a 2) (+ a 9.3) -15.25])
-           (key-place 2 0))))
+    (->> (prism a a a 0 6)
+         (rotate π [0 0 1])
+         (rotate (/ π 15) [1 0 0])
+         (translate [(/ a 2) (+ a 9.3) -15.25])
+         (key-place 2 0))))
 
 (def case-inside-cutout
   (let [a (+ mount-width 8)
         b (+ mount-width 3.8)
         c 6]
     (union
-      (->> (prism b b c 2 2)
-           (rotate π [1 0 0])
-           (translate [(- (/ b 2)) 10.5 (+ c 4)])
-           (key-place 2 0)))))
+     (->> (prism b b c 2 2)
+          (rotate π [1 0 0])
+          (translate [(- (/ b 2)) 10.5 (+ c 4)])
+          (key-place 2 0)))))
 
 (def front-wall
   (let [step wall-step ;;0.1
@@ -552,40 +550,40 @@
         wall-cube-top-backtep 0.05
         place case-place]
     (difference
+     (union
       (union
-        (union
-           (hull (place left-wall-column 0 (translate [1 -1 1] wall-cube-bottom-back))
-                 (place (+ left-wall-column 1) 0  (translate [0 -1 1] wall-cube-bottom-back))
-                 (key-place 0 0 web-post-tl)
-                 (key-place 0 0 web-post-tr))
+       (hull (place left-wall-column 0 (translate [1 -1 1] wall-cube-bottom-back))
+             (place (+ left-wall-column 1) 0  (translate [0 -1 1] wall-cube-bottom-back))
+             (key-place 0 0 web-post-tl)
+             (key-place 0 0 web-post-tr))
 
-           (hull (place 5 0 (translate [0 -0.91 1.32] wall-cube-bottom-back))
-                 (place right-wall-column 0 (translate [-1.2 -1.52 0.91] wall-cube-bottom-back))
-                 (key-place 5 0 web-post-tl)
-                 (key-place 5 0 (translate [5.6 0 0.05] web-post-tr)))
+       (hull (place 5 0 (translate [0 -0.91 1.32] wall-cube-bottom-back))
+             (place right-wall-column 0 (translate [-1.2 -1.52 0.91] wall-cube-bottom-back))
+             (key-place 5 0 web-post-tl)
+             (key-place 5 0 (translate [5.6 0 0.05] web-post-tr)))
 
-           (apply union
-                  (for [x (range 1 5)]
-                    (union
-                     (hull (place (- x 1/2) 0 (translate [0 -1 1] wall-cube-bottom-back))
-                           (place (+ x 1/2) 0 (translate [0 -1 1] wall-cube-bottom-back))
-                           (key-place x 0 web-post-tl)
-                           (key-place x 0 web-post-tr))
-                     (hull (place (- x 1/2) 0 (translate [0 -1 1] wall-cube-bottom-back))
-                           (key-place x 0 web-post-tl)
-                           (key-place (- x 1) 0 web-post-tr))))))
+       (apply union
+              (for [x (range 1 5)]
+                (union
+                 (hull (place (- x 1/2) 0 (translate [0 -1 1] wall-cube-bottom-back))
+                       (place (+ x 1/2) 0 (translate [0 -1 1] wall-cube-bottom-back))
+                       (key-place x 0 web-post-tl)
+                       (key-place x 0 web-post-tr))
+                 (hull (place (- x 1/2) 0 (translate [0 -1 1] wall-cube-bottom-back))
+                       (key-place x 0 web-post-tl)
+                       (key-place (- x 1) 0 web-post-tr))))))
 
-         (hull (place (- 5 1/2) 0 (translate [0 -1 1] wall-cube-bottom-back))
-               (place 5 0 (translate [0 -0.91 1.32] wall-cube-bottom-back))
-               (key-place 4 0 web-post-tr)
-               (key-place 5 0 web-post-tl)))
-      (union case-back-cutout
-             case-inside-cutout))))
+      (hull (place (- 5 1/2) 0 (translate [0 -1 1] wall-cube-bottom-back))
+            (place 5 0 (translate [0 -0.91 1.32] wall-cube-bottom-back))
+            (key-place 4 0 web-post-tr)
+            (key-place 5 0 web-post-tl)))
+     (union case-back-cutout
+            case-inside-cutout))))
 
 (def right-wall
   (let [place case-place]
     (union
-          (apply union
+     (apply union
             (concat
              (for [x (range 0 5)]
                (union
@@ -723,25 +721,25 @@
         thumb-br (->> web-post-br
                       (translate [-0 (- plate-height) 0]))
         thumb-bottom (->> (cube 3 3 0.001)
-                       (translate [13.6 -15 -8]))
+                          (translate [13.6 -15 -8]))
         thumb-top (->> (cube 1 1 1)
                        (translate [13 -11.7 -5.4]))]
-     (hull (place thumb-right-wall wall (translate [-1 1.5 thumb-case-z] wall-cube-bottom-front))
-           (key-place 1 4 web-post-bl)
-           (place 0 -1/2 thumb-br)
-           (case-place 0 4 thumb-top)
-           (case-place 0 4 (translate [-1 10 0] thumb-bottom)))))
+    (hull (place thumb-right-wall wall (translate [-1 1.5 thumb-case-z] wall-cube-bottom-front))
+          (key-place 1 4 web-post-bl)
+          (place 0 -1/2 thumb-br)
+          (case-place 0 4 thumb-top)
+          (case-place 0 4 (translate [-1 10 0] thumb-bottom)))))
 
 (def new-case
-    (union front-wall
-           right-wall
-           back-wall
-           left-wall
-           left-inside-wall
-           thumb-back-wall
-           thumb-left-wall
-           thumb-inside-wall
-           thumb-front-wall))
+  (union front-wall
+         right-wall
+         back-wall
+         left-wall
+         left-inside-wall
+         thumb-back-wall
+         thumb-left-wall
+         thumb-inside-wall
+         thumb-front-wall))
 
 ;;;;;;;;;;;;
 ;; Bottom ;;
@@ -756,7 +754,6 @@
 (defn bottom-hull [p]
   (hull p (bottom 1 p)))
 
-
 (def bottom-key-guard (->> (cube mount-width mount-height web-thickness)
                            (translate [0 0 (+ (- (/ web-thickness 2)) -5)])))
 (def bottom-front-key-guard (->> (cube mount-width (/ mount-height 2) web-thickness)
@@ -764,18 +761,18 @@
 
 (defn stand-at [diameter placement]
   (let [bumper-radius (/ diameter 2)
-       stand-diameter (+ diameter 2)
-       stand-radius (/ stand-diameter 2)]
+        stand-diameter (+ diameter 2)
+        stand-radius (/ stand-diameter 2)]
     (difference (->> (sphere stand-radius)
                      (translate [0 0 (+ (/ stand-radius -2) -4.5)])
-                      placement
-                      bottom-hull)
+                     placement
+                     bottom-hull)
                 (->> (cube stand-diameter stand-diameter stand-radius)
                      (translate [0 0 (/ stand-radius -2)])
-                      placement)
+                     placement)
                 (->> (sphere bumper-radius)
                      (translate [0 0 (+ (/ stand-radius -2) -4.5)])
-                      placement
+                     placement
                      (bottom 1.5)))))
 
 (def bottom-plate
@@ -893,41 +890,36 @@
                     (for [x (range 1 6)]
                       (union
                        (hull
-                             (do (bottom-place (- x 1/2) 0 (translate [0 back-offset 1] wall-cube-bottom-back)))
-                              (if (= x 5)
-                               (do (bottom-place (+ x 1/2) 0 (translate [10.6 (- back-offset 0.35) 1.30] wall-cube-bottom-back)))
-                               (do (bottom-place (+ x 1/2) 0 (translate [0 back-offset 1] wall-cube-bottom-back))))
-                             (key-place x 0 web-post-tl)
-                             (key-place x 0 web-post-tr))
+                        (do (bottom-place (- x 1/2) 0 (translate [0 back-offset 1] wall-cube-bottom-back)))
+                        (if (= x 5)
+                          (do (bottom-place (+ x 1/2) 0 (translate [10.6 (- back-offset 0.35) 1.30] wall-cube-bottom-back)))
+                          (do (bottom-place (+ x 1/2) 0 (translate [0 back-offset 1] wall-cube-bottom-back))))
+                        (key-place x 0 web-post-tl)
+                        (key-place x 0 web-post-tr))
                        (hull (bottom-place (- x 1/2) 0 (translate [0 back-offset 1] wall-cube-bottom-back))
                              (key-place x 0 web-post-tl)
                              (key-place (- x 1) 0 web-post-tr))))
                     [(hull (bottom-place left-wall-column 0 (translate [left-offset back-offset 1.2] wall-cube-bottom-back))
                            (bottom-place (+ left-wall-column 1) 0  (translate [0 back-offset 1.2] wall-cube-bottom-back))
                            (key-place 0 0 web-post-tl)
-                           (key-place 0 0 web-post-tr))]
-
-                    )
+                           (key-place 0 0 web-post-tr))])
          left-wall (let [place bottom-place]
-               [
-                (hull (place left-wall-column 0 (translate [left-offset back-offset 1.2] wall-cube-bottom-back))
-                      (place left-wall-column 1 (translate [left-offset 1.5 1/2] wall-cube-bottom-back))
-                      (key-place 0 0 web-post-tl)
-                      (key-place 0 0 web-post-bl))
-                (hull (place left-wall-column 1 (translate [left-offset 0 1/2] wall-cube-bottom-back))
-                      (place left-wall-column 2 (translate [left-offset 1.5 0.7] wall-cube-bottom-back))
-                      (key-place 0 0 web-post-bl)
-                      (key-place 0 1 web-post-bl))
-                (hull (place left-wall-column 2 (translate [left-offset 0 0.7] wall-cube-bottom-back))
-                      (place left-wall-column 1.6666  (translate [left-offset 0 3] wall-cube-bottom-front))
-                      (place left-wall-column 1.6666  (translate [left-offset 0 1] wall-cube-bottom-front))
-                      (key-place 0 1 web-post-bl)
-                      (key-place 0 2 web-post-bl))
-                (hull (place left-wall-column 1.6666  (translate [left-offset 0 1] wall-cube-bottom-front))
-                      (key-place 0 2 web-post-bl)
-                      (key-place 0 3 web-post-tl))
-
-                ])
+                     [(hull (place left-wall-column 0 (translate [left-offset back-offset 1.2] wall-cube-bottom-back))
+                            (place left-wall-column 1 (translate [left-offset 1.5 1/2] wall-cube-bottom-back))
+                            (key-place 0 0 web-post-tl)
+                            (key-place 0 0 web-post-bl))
+                      (hull (place left-wall-column 1 (translate [left-offset 0 1/2] wall-cube-bottom-back))
+                            (place left-wall-column 2 (translate [left-offset 1.5 0.7] wall-cube-bottom-back))
+                            (key-place 0 0 web-post-bl)
+                            (key-place 0 1 web-post-bl))
+                      (hull (place left-wall-column 2 (translate [left-offset 0 0.7] wall-cube-bottom-back))
+                            (place left-wall-column 1.6666  (translate [left-offset 0 3] wall-cube-bottom-front))
+                            (place left-wall-column 1.6666  (translate [left-offset 0 1] wall-cube-bottom-front))
+                            (key-place 0 1 web-post-bl)
+                            (key-place 0 2 web-post-bl))
+                      (hull (place left-wall-column 1.6666  (translate [left-offset 0 1] wall-cube-bottom-front))
+                            (key-place 0 2 web-post-bl)
+                            (key-place 0 3 web-post-tl))])
          thumbs [(hull (thumb-place 0 -1/2 web-post-bl)
                        (thumb-place 0 -1/2 web-post-tl)
                        (thumb-place 1 -1/2 web-post-tr)
@@ -969,8 +961,7 @@
                        (thumb-place 0 -1 web-post-bl)
                        (thumb-place 1 -1/2 web-post-br)
                        (thumb-place 1 -1 web-post-br))]
-         thumb-back-wall [
-                          (hull
+         thumb-back-wall [(hull
                            (thumb-place 1/2 thumb-back-y (translate [-0.2 thumb-back-offset thumb-ridge-height] wall-cube-bottom-back))
                            (thumb-place 1 1 web-post-tr)
                            (thumb-place 3/2 thumb-back-y (translate [-0.2 thumb-back-offset thumb-ridge-height] wall-cube-bottom-back))
@@ -989,10 +980,7 @@
                            (thumb-place 1/2 thumb-back-y (translate [-3.2 (+ thumb-back-offset 0.07) thumb-ridge-height] wall-cube-bottom-back))
                            (bottom-place left-wall-column 1.6666 (translate [left-offset 0 (- thumb-ridge-height 0.2)] wall-cube-bottom-front))
                            (key-place 0 3 web-post-tl)
-                           (thumb-place 1 1 web-post-tr)
-
-                           )
-                          ]
+                           (thumb-place 1 1 web-post-tr))]
          thumb-left-wall [(hull
                            (thumb-place thumb-left-wall-column thumb-back-y (translate [thumb-left-offset thumb-back-offset thumb-ridge-height] wall-cube-bottom-back))
                            (thumb-place thumb-left-wall-column 0 (translate [thumb-left-offset 0 thumb-ridge-height] wall-cube-bottom-back))
@@ -1079,30 +1067,30 @@
 
 (defn stands-at [diameter]
   (union
-    [(stand-at diameter #(key-place 0.06 1 %))
-     (stand-at diameter #(thumb-place 1 -1/2 %))
-     (stand-at diameter #(key-place 5 0 %))
-     (stand-at diameter #(key-place 5 3 %))]))
+   [(stand-at diameter #(key-place 0.06 1 %))
+    (stand-at diameter #(thumb-place 1 -1/2 %))
+    (stand-at diameter #(key-place 5 0 %))
+    (stand-at diameter #(key-place 5 3 %))]))
 
 (defn stands-alignment [side]
   (let
-    [hole (->> (cylinder 2 15)
-               (translate [0 0 -8])
-               (with-fn wall-sphere-n))]
+   [hole (->> (cylinder 2 15)
+              (translate [0 0 -8])
+              (with-fn wall-sphere-n))]
     (union [(if (= side RIGHT)
               (translate [0 0 -7] (key-place 0.06 1 hole))
               (key-place 0.06 1 hole))
-           (thumb-place 1 -1/2 hole)
-           (key-place 5 0 hole)
-           (key-place 5 3 hole)])))
+            (thumb-place 1 -1/2 hole)
+            (key-place 5 0 hole)
+            (key-place 5 3 hole)])))
 
 (defn stands-diff [shape]
   (let [-tolerance (if STANDS_SEPERATE (- 0.2) 0)
-       diff (union
+        diff (union
               bottom-plate
               (hull shape))]
-   (union (translate [0 -tolerance 0] diff)
-          (translate [-tolerance 0 0] diff))))
+    (union (translate [0 -tolerance 0] diff)
+           (translate [-tolerance 0 0] diff))))
 
 (def stands (stands-at 9.8)) ; 3/8 = 9.6 1/2 = 12.7
 
@@ -1156,13 +1144,13 @@
                  (translate [(+ cover-sphere-x 4) 0 -6])
                  (key-place 1/2 3/2))]
     (union
-      (hull cover-sphere-bl cover-sphere-br cover-sphere-tl cover-sphere-tr)
-      (hull cover-sphere-br cover-sphere-bl bl br)
-      (hull cover-sphere-tr cover-sphere-tl tl tr)
-      (hull cover-sphere-tl tl mlb mlt)
-      (hull cover-sphere-bl bl mlb mlt)
-      (hull cover-sphere-tr tr mrb mrt)
-      (hull cover-sphere-br br mrb mrt))))
+     (hull cover-sphere-bl cover-sphere-br cover-sphere-tl cover-sphere-tr)
+     (hull cover-sphere-br cover-sphere-bl bl br)
+     (hull cover-sphere-tr cover-sphere-tl tl tr)
+     (hull cover-sphere-tl tl mlb mlt)
+     (hull cover-sphere-bl bl mlb mlt)
+     (hull cover-sphere-tr tr mrb mrt)
+     (hull cover-sphere-br br mrb mrt))))
 
 (def io-exp-width 10)
 (def io-exp-height 8)
@@ -1193,9 +1181,8 @@
        (with-fn 50)
        (key-place 1/2 0)))
 
-(def trrs-box-hole (->> (cube 14 14 7 )
+(def trrs-box-hole (->> (cube 14 14 7)
                         (translate [0 1 -2])))
-
 
 (def trrs-cutout
   (->> (union trrs-hole
@@ -1223,18 +1210,14 @@
                (color [0 0 1]))
           (->> (cube 5 5 (+ teensy-pcb-thickness 5))
                (translate [0 (/ 30.5 -2) (+ (- teensy-offset-height)
-                                            #_(/ (+ teensy-pcb-thickness 5) -2)
-                                            )])
+                                            #_(/ (+ teensy-pcb-thickness 5) -2))])
                (key-place 1/2 3/2)
-               (color [0 0 1]))
-
-          ))
+               (color [0 0 1]))))
    teensy-pcb
    (->> (cube 18 31 (+ teensy-pcb-thickness 1))
         (translate [0 1.5 (+ (/ teensy-pcb-thickness -2) (- teensy-offset-height) -1.5)])
         (key-place 1/2 3/2)
-        (color [1 0 0]))
-   ))
+        (color [1 0 0]))))
 
 (def usb-cutout
   (let [hole-height 6.2
@@ -1250,7 +1233,6 @@
          (translate [0 0 (- 1)])
          (translate [0 0 (- teensy-offset-height)])
          (key-place 1/2 3/2))))
-
 
 ;;;;;;;;;;;;;;;;
 ;; Tolerances ;;
@@ -1273,209 +1255,35 @@
         t2 (* t 2)
         -t2 (* -t 2)]
     (union
-      (place [0 0 0] case-inside-cutout)
-      (place [0 0 0] new-case)
-      (if-not FAST_RENDER
-        (union
-          (place [0 0 -t] new-case)
-          (place [t2 -t -tq] front-wall)
-          (place [t t -th] front-wall)
-          (place [0 -t -th] front-wall)
-          (place [-t 0 -t] right-wall)
-          (place [t 0 -t] right-wall)
-          (place [0 th -th] back-wall)
-          (place [0 -th -th] back-wall)
-          (place [-45 50 54.3] (rotate (/ π 5.5) [1 0 0] (cube 10 10 10)))
-          (place [80 49 29.83] (rotate (/ π 5.5) [1 0 0] (cube 10 10 10)))
-          (place [-t -t -t] left-wall)
-          (place [t 0 -t2] left-wall)
-          (place [-t 0 0] left-inside-wall)
-          (place [-t 0 -t] left-inside-wall)
-          (place [-t -t -t] left-inside-wall)
-          (place [0 -t -t2] thumb-back-wall)
-          (place [-t t -th] thumb-back-wall)
-          (place [0 t -t] thumb-back-wall)
-          (place [t 0 (* -t 1.5)] thumb-left-wall)
-          (place [-t 0 -t] thumb-left-wall)
-          (place [t t -t] thumb-inside-wall)
-          (place [-t 0 -t] thumb-inside-wall)
-          (place [-t t -t] thumb-front-wall)
-          (place [t 0 -t] thumb-front-wall)
-          (place [0 (* 2 -t) -t] thumb-front-wall))))))
-
-
-;;;;;;;;;;;;;;;;
-;; Palm Rests ;;
-;;;;;;;;;;;;;;;;
-
-(defn bezier-conic [p0 p1 p2 steps]
-  (let [step1 (/ (- p1 p0) steps)
-        step2 (/ (- p2 p1) steps)]
-    (for [i (range steps)]
-      (let [point1 (+ p0 (* step1 i))
-            point2 (+ p1 (* step2 i))
-            point3 (+ p0 (* step1 (+ i 1)))
-            point4 (+ p1 (* step2 (+ i 1)))
-            bpoint1 (+ point1 (* (- point2 point1) (/ i steps)))
-            bpoint2 (+ point3 (* (- point4 point3) (/ (+ i 1) steps)))]
-        (polygon [bpoint1 bpoint2 p1])))))
-
-(defn bezier-cone [d h curve steps & {:keys [curve2] :or {curve2 (/ h 2)}}]
-  (let [p0 [(/ d 2) 0]
-        p1 [(+ curve (/ d 4)) curve2]
-        p2 [0 h]]
-  (cond
-     (< (nth p1 0) (/ d 4)) ; concave
-       (do (->> (union (polygon [[0 0] p0 p1 p2 [0 h]])
-                       (bezier-conic p0 p1 p2 steps))
-                (extrude-rotate {:fn steps})))
-     (> (nth p1 0) (/ d 4)) ; convex
-       (do (->> (difference (polygon [[0 0] p0 p1 p2 [0 h]])
-                            (bezier-conic p0 p1 p2 steps))
-                (extrude-rotate {:fn steps}))))))
-
-(defn front-palm-rest-rotate [shape]
-  (->> shape
-    (rotate (/ π 1) [1 0 0])
-    (rotate (/ π 2) [0 0 1])
-    (rotate (/ π 4) [-1 0 0])
-    (rotate (/ π 6.8) [0 1 0])))
-
-(def palm-rest
-  (let [p0 [15 0]
-        p1 [25 14]
-        p2 [7 30]
-        stand-diameter 9.6
-        rest-sphere-n (if FAST_RENDER 20 170)
-        profile-sphere-n (* rest-sphere-n 2)
-        floor (->> (cube 300 300 50)
-                   (translate [0 0 -25]))
-
-        profile-cyl (->> (cylinder 200 50)
-                         (with-fn profile-sphere-n))
-
-        rest-place #(->> % (rotate (/ π 40) [0 1 1])
-                           (rotate (/ π 11) [1 0 0])
-                           (rotate (/ π 12) [0 1 0])
-                           (translate [22 -100 7]))
-
-        front-profile (->> (difference profile-cyl
-                                       (scale [1.4 0.81 1.1] profile-cyl))
-                           (scale [1 1.4 1])
-                           (translate [0 -225 55])
-                           (rotate (/ π 3.2) [-1 -0.2 -0.2]))
-
-        bottom-profile (->> (cylinder 100 200)
-                            (with-fn profile-sphere-n)
-                            (rotate (/ π 2.3) [0 1 0])
-                            (translate [0 0 -65])
-                            (scale [1 1.1 1]))
-
-        base-shape (->> (bezier-cone 80 100 43 rest-sphere-n :curve2 43)
-                        (rotate (/ π 2) [-1 0 0])
-                        (translate [0 -10 0])
-                        (scale [1.1 1 1]))
-
-        base-rest-shape (difference
-                          (rest-place
-                           (difference base-shape
-                                       front-profile
-                                       bottom-profile
-                                       (scale [0.93 0.93 0.93] base-shape)))
-                         floor)
-
-        shape-profile (->> (project base-rest-shape)
-                           (extrude-linear {:height 20}))
-
-        side-profile (->> (difference (scale [1.1 1.1 1] shape-profile)
-                                      (translate [3 -12 0]
-                                        (scale [0.97 0.97 1.2] shape-profile)))
-                          (rotate (/ π 26) [0 1 0])
-                          (translate [-2 9 50]))
-
-        rest-shape (difference base-rest-shape
-                               side-profile)
-
-        inner-rest #(intersection
-                      % (intersection
-                        (rest-place base-shape)
-                        (->> (project rest-shape)
-                             (extrude-linear {:height 100})
-                             (translate [0 0 (/ 100 2)]))))
-
-        stand-place #(translate [24 -60 0] %)
-
-        front-rect (->> (prism 15 9 50 5 -2)
-                        front-palm-rest-rotate
-                        (translate [15.5 15 35])
-                        stand-place)
-
-        front-rect-diff (->> (cube 100 30 30)
-                             (rotate (/ π 4) [1 0 0])
-                             (rotate (/ π 20) [0 0 -1])
-                             (translate [0 -37 31]))
-
-        back-neg-rect (->> (prism 20.3 8 43 3 1)
-                           (rotate (/ π 3.5) [1 0 0])
-                           (translate [-10.15 -35 -5])
-                           stand-place)
-
-        back-neg-rect-diff (->> (cube 30 30 30)
-                                (rotate (/ π 6) [-1 0 0])
-                                (translate [-7.3 -80.6 28])
-                                stand-place)
-
-        back-pos-rect-1 (->> (prism 12 10 60 3 4)
-                             (rotate (/ π 2) [0 0 1])
-                             (rotate (/ π 9) [-1 0 0])
-                             (translate [5 -56 11.8])
-                             stand-place
-                             inner-rest)
-
-        back-pos-rect-2 (->> (prism 15 5 31 3 -2)
-                             (rotate (/ π 6.8) [-1 0 0])
-                             (translate [-7.5 -66 23.5])
-                             stand-place)
-
-        inner-support (->> (bezier-cone 90 12 -10 rest-sphere-n)
-                           (rotate (/ π 1.01) [-1 0 0])
-                           (rotate (/ π 20) [0 1 0])
-                           (translate [3 -57 54])
-                           stand-place
-                           inner-rest)
-
-        bottom-rect (->> (cube 30 20 7)
-                         (rotate (/ π 2) [0 0 1])
-                         (translate [0 -19.3 1])
-                         stand-place)
-        stands (difference
-                 (union front-rect
-                        (translate [48 0 0] (mirror [-1 0 0] front-rect))
-                        bottom-rect
-                        inner-support
-                        back-neg-rect
-                        back-pos-rect-1
-                        back-pos-rect-2)
-               back-neg-rect-diff
-               bottom-plate
-               (if RESTS_SEPERATE
-                 (do case-tolerance
-                     (translate [0 (- tolerance) 0] bottom-plate)))
-               front-rect-diff
-               floor)]
-    (union stands
-           rest-shape)))
-
-(def rest-alignment
-  (let [shape (->> (cylinder 2 20)
-                   front-palm-rest-rotate
-                   (translate [13.5 0 0])
-                   (with-fn 20))]
-
-    (translate [24 -51 18]
-      (union
-        (translate [-0.8 -1.75 -1.75] shape)
-        (mirror [-1 0 0] shape)))))
+     (place [0 0 0] case-inside-cutout)
+     (place [0 0 0] new-case)
+     (if-not FAST_RENDER
+       (union
+        (place [0 0 -t] new-case)
+        (place [t2 -t -tq] front-wall)
+        (place [t t -th] front-wall)
+        (place [0 -t -th] front-wall)
+        (place [-t 0 -t] right-wall)
+        (place [t 0 -t] right-wall)
+        (place [0 th -th] back-wall)
+        (place [0 -th -th] back-wall)
+        (place [-45 50 54.3] (rotate (/ π 5.5) [1 0 0] (cube 10 10 10)))
+        (place [80 49 29.83] (rotate (/ π 5.5) [1 0 0] (cube 10 10 10)))
+        (place [-t -t -t] left-wall)
+        (place [t 0 -t2] left-wall)
+        (place [-t 0 0] left-inside-wall)
+        (place [-t 0 -t] left-inside-wall)
+        (place [-t -t -t] left-inside-wall)
+        (place [0 -t -t2] thumb-back-wall)
+        (place [-t t -th] thumb-back-wall)
+        (place [0 t -t] thumb-back-wall)
+        (place [t 0 (* -t 1.5)] thumb-left-wall)
+        (place [-t 0 -t] thumb-left-wall)
+        (place [t t -t] thumb-inside-wall)
+        (place [-t 0 -t] thumb-inside-wall)
+        (place [-t t -t] thumb-front-wall)
+        (place [t 0 -t] thumb-front-wall)
+        (place [0 (* 2 -t) -t] thumb-front-wall))))))
 
 ;;;;;;;;;;;;;;;;;;
 ;; Final Export ;;
@@ -1487,9 +1295,9 @@
 
 (def dactyl-stands-left
   (mirror [-1 0 0]
-    (difference stands
-                (if STANDS_SEPERATE (stands-alignment LEFT)
-                   (stands-diff io-exp-cover)))))
+          (difference stands
+                      (if STANDS_SEPERATE (stands-alignment LEFT)
+                          (stands-diff io-exp-cover)))))
 
 (def dactyl-stands-right
   (difference stands
@@ -1497,81 +1305,68 @@
               (if STANDS_SEPERATE
                 ((stands-alignment RIGHT)
                  (stands-diff (key-place 0 1 (cube 10 10 10)))
-                 (stands-diff (key-place 0 1 (translate [0 0 -5] (cube 15 15 15) )))))))
-
-(def dactyl-rest-left
-  (mirror [-1 0 0]
-    (difference palm-rest
-                (if RESTS_SEPERATE rest-alignment))))
-
-(def dactyl-rest-right
-  (difference palm-rest
-                (if RESTS_SEPERATE rest-alignment)))
+                 (stands-diff (key-place 0 1 (translate [0 0 -5] (cube 15 15 15))))))))
 
 (def dactyl-keycaps-left
   (mirror [-1 0 0]
-      (union thumbcaps caps)))
+          (union thumbcaps caps)))
 
 (def dactyl-keycaps-right
-      (union thumbcaps caps))
+  (union thumbcaps caps))
 
 (def dactyl-bottom-right
   (union
-    (if-not RESTS_SEPERATE dactyl-rest-right)
-    (if-not STANDS_SEPERATE dactyl-stands-right)
-    (difference
-      (union teensy-cover
-             (difference bottom-plate
-                         case-tolerance
-                         (hull teensy-cover)
-                          (if RESTS_SEPERATE rest-alignment)
-                         teensy-cover
-                         trrs-cutout
-                         screw-holes
-                         floor))
-      (if STANDS_SEPERATE (stands-alignment RIGHT))
-      usb-cutout)))
+   (if-not STANDS_SEPERATE dactyl-stands-right)
+   (difference
+    (union teensy-cover
+           (difference bottom-plate
+                       case-tolerance
+                       (hull teensy-cover)
+                       teensy-cover
+                       trrs-cutout
+                       screw-holes
+                       floor))
+    (if STANDS_SEPERATE (stands-alignment RIGHT))
+    usb-cutout)))
 
 (def dactyl-bottom-left
   (union
-    (if-not RESTS_SEPERATE dactyl-rest-left)
-    (if-not STANDS_SEPERATE dactyl-stands-left)
-    (mirror [-1 0 0]
-      (difference
-        (union io-exp-cover
-              (difference bottom-plate
-                          case-tolerance
-                          (hull io-exp-cover)
-                          (if RESTS_SEPERATE rest-alignment)
-                          io-exp-cover
-                          trrs-cutout
-                          screw-holes
-                          floor))
-        (if STANDS_SEPERATE (stands-alignment LEFT))))))
+   (if-not STANDS_SEPERATE dactyl-stands-left)
+   (mirror [-1 0 0]
+           (difference
+            (union io-exp-cover
+                   (difference bottom-plate
+                               case-tolerance
+                               (hull io-exp-cover)
+                               io-exp-cover
+                               trrs-cutout
+                               screw-holes
+                               floor))
+            (if STANDS_SEPERATE (stands-alignment LEFT))))))
 
 (def dactyl-top-right
   (offset-case-place [0 0 0]
-    (union
-      (difference
-        (union key-holes
-              connectors
-              thumb
-              new-case
-              teensy-support)
-      trrs-hole-just-circle
-      screw-holes))))
+                     (union
+                      (difference
+                       (union key-holes
+                              connectors
+                              thumb
+                              new-case
+                              teensy-support)
+                       trrs-hole-just-circle
+                       screw-holes))))
 
 (def dactyl-top-left
   (mirror [-1 0 0]
-    (offset-case-place [0 0 0]
-      (union
-        (difference
-          (union key-holes
-                 connectors
-                 thumb
-                 new-case)
-          trrs-hole-just-circle
-          screw-holes)))))
+          (offset-case-place [0 0 0]
+                             (union
+                              (difference
+                               (union key-holes
+                                      connectors
+                                      thumb
+                                      new-case)
+                               trrs-hole-just-circle
+                               screw-holes)))))
 
 ;;;;;;;;;;;;;
 ;; Outputs ;;
@@ -1595,18 +1390,10 @@
 (spit "things/dactyl-keycaps-right.scad"
       (write-scad dactyl-keycaps-right))
 
-(if RESTS_SEPERATE
-  (do
-    (spit "things/dactyl-rest-left.scad"
-          (write-scad dactyl-rest-left))
-
-    (spit "things/dactyl-rest-right.scad"
-          (write-scad dactyl-rest-right))))
-
 (if STANDS_SEPERATE
   (do
-   (spit "things/dactyl-stands-left.scad"
-         (write-scad dactyl-stands-left))
+    (spit "things/dactyl-stands-left.scad"
+          (write-scad dactyl-stands-left))
 
-   (spit "things/dactyl-stands-right.scad"
-         (write-scad dactyl-stands-right))))
+    (spit "things/dactyl-stands-right.scad"
+          (write-scad dactyl-stands-right))))
