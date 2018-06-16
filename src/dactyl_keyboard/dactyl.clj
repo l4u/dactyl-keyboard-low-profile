@@ -9,12 +9,16 @@
 (def ^:const RIGHT 2)
 (def ^:const FAST_RENDER false)
 (def ^:const STANDS_SEPERATE false)
+(def create-side-nubs true)
 
 ;;;;;;;;;;;;;;;;;
 ;; Switch Hole ;;
 ;;;;;;;;;;;;;;;;;
 
-(def plate-thickness 4) ; was 4
+(def plate-thickness 2) ; was 4
+(def side-nub-thickness 4)
+(def retention-tab-thickness 1.5)
+(def retention-tab-hole-thickness (- plate-thickness retention-tab-thickness))
 
 (def keyswitch-height 14.4) ;; Was 14.1, then 14.25
 (def keyswitch-width 14.4)
@@ -27,26 +31,37 @@
 (def mount-height (+ keyswitch-height 3))
 
 (def single-plate
-  (let [top-wall (->> (cube (+ keyswitch-width 3) 1.5 plate-thickness)
-                      (translate [0
-                                  (+ (/ 1.5 2) (/ keyswitch-height 2))
-                                  (/ plate-thickness 2)]))
-        left-wall (->> (cube 1.5 (+ keyswitch-height 3) plate-thickness)
-                       (translate [(+ (/ 1.5 2) (/ keyswitch-width 2))
-                                   0
-                                   (/ plate-thickness 2)]))
-        side-nub (->> (binding [*fn* 30] (cylinder 1 2.75)) ; spec says 5.7
-                      (rotate (/ π 2) [1 0 0])
-                      (translate [(+ (/ keyswitch-width 2)) 0 1])
-                      (hull (->> (cube 1.5 2.75 plate-thickness)
-                                 (translate [(+ (/ 1.5 2) (/ keyswitch-width 2))
-                                             0
-                                             (/ plate-thickness 2)]))))
-        plate-half (union top-wall left-wall (with-fn 100 side-nub))]
-    (union plate-half
-           (->> plate-half
-                (mirror [1 0 0])
-                (mirror [0 1 0])))))
+(let [top-wall (->> (cube (+ keyswitch-width 3) 1.5 plate-thickness)
+                    (translate [0
+                                (+ (/ 1.5 2) (/ keyswitch-height 2))
+                                (/ plate-thickness 2)]))
+      left-wall (->> (cube 1.5 (+ keyswitch-height 3) plate-thickness)
+                     (translate [(+ (/ 1.5 2) (/ keyswitch-width 2))
+                                 0
+                                 (/ plate-thickness 2)]))
+      side-nub (->> (binding [*fn* 30] (cylinder 1 2.75))
+                    (rotate (/ π 2) [1 0 0])
+                    (translate [(+ (/ keyswitch-width 2)) 0 1])
+                    (hull (->> (cube 1.5 2.75 side-nub-thickness)
+                               (translate [(+ (/ 1.5 2) (/ keyswitch-width 2))
+                                           0
+                                           (/ side-nub-thickness 2)])))
+                    (translate [0 0 (- plate-thickness side-nub-thickness)]))
+      plate-half (union top-wall left-wall (if create-side-nubs (with-fn 100 side-nub)))
+      top-nub (->> (cube 5 5 retention-tab-hole-thickness)
+                   (translate [(+ (/ keyswitch-width 2)) 0 (/ retention-tab-hole-thickness 2)]))
+      top-nub-pair (union top-nub
+                          (->> top-nub
+                               (mirror [1 0 0])
+                               (mirror [0 1 0])))]
+  (difference
+   (union plate-half
+          (->> plate-half
+               (mirror [1 0 0])
+               (mirror [0 1 0])))
+   (->>
+    top-nub-pair
+    (rotate (/ π 2) [0 0 1])))))
 
 ;;;;;;;;;;;;;;;;
 ;; SA Keycaps ;;
@@ -1198,19 +1213,20 @@
                      (color [1 0 0])))
 
 (def teensy-support
+(let [teensy-plate-offset (- -2 (/ web-thickness 2))]
   (difference
    (union
     (->> (cube 5 5 9)
-         (translate [0 0 -2])
+         (translate [0 0 teensy-plate-offset])
          (key-place 1/2 3/2)
          (color [0 1 0]))
     (hull (->> (cube 5 6 9)
-               (translate [0 0 -2])
+               (translate [0 0 teensy-plate-offset])
                (key-place 1/2 2)
                (color [0 0 1]))
           (->> (cube 5 5 (+ teensy-pcb-thickness 5))
                (translate [0 (/ 30.5 -2) (+ (- teensy-offset-height)
-                                            #_(/ (+ teensy-pcb-thickness 5) -2))])
+                                            #_(/ (+ teensy-pcb-thickness 5) teensy-plate-offset))])
                (key-place 1/2 3/2)
                (color [0 0 1]))))
    teensy-pcb
@@ -1218,6 +1234,7 @@
         (translate [0 1.5 (+ (/ teensy-pcb-thickness -2) (- teensy-offset-height) -1.5)])
         (key-place 1/2 3/2)
         (color [1 0 0]))))
+)
 
 (def usb-cutout
   (let [hole-height 6.2
